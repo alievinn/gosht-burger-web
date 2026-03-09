@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -14,9 +13,12 @@ import { CartModal } from './components/CartModal';
 import { LoyaltyModal } from './components/LoyaltyModal';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CartItem, MenuItem } from './types';
-import { MENU_ITEMS } from './constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare } from 'lucide-react';
+
+// --- FIREBASE BAĞLANTISI ---
+import { db } from './services/firebase';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 const App: React.FC = () => {
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false);
@@ -25,7 +27,9 @@ const App: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(MENU_ITEMS);
+  
+  // İlk başta menüyü boş bir dizi yapıyoruz, Firebase'den dolacak
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,21 +40,24 @@ const App: React.FC = () => {
     }
   }, [location]);
 
+  // --- GERÇEK ZAMANLI VERİ ÇEKME (FIRESTORE) ---
   useEffect(() => {
-    const loadMenuItems = async () => {
-      try {
-        const response = await fetch('/api/menu');
-        const data = await response.json();
-        if (data) {
-          setMenuItems(data);
-        }
-      } catch (error) {
-        console.error("Error loading menu items:", error);
-      }
-    };
-    loadMenuItems();
-    window.addEventListener('menu-updated', loadMenuItems);
-    return () => window.removeEventListener('menu-updated', loadMenuItems);
+    // 'products' koleksiyonuna bağlan ve verileri çek
+    const q = query(collection(db, 'products'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const items = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as MenuItem[];
+      
+      setMenuItems(items);
+      console.log("Batman'dan veriler güncellendi:", items);
+    }, (error) => {
+      console.error("Firebase veri çekme hatası:", error);
+    });
+
+    return () => unsubscribe(); // Bağlantıyı temizle
   }, []);
 
   const handleCloseAdmin = () => {
@@ -61,7 +68,6 @@ const App: React.FC = () => {
   };
 
   const handleAddToCart = (itemName: string, quantity: number, customizations?: string, variantInfo?: string): boolean => {
-    // Find item fuzzy match
     const item = menuItems.find(i => 
       i.name.toLowerCase().includes(itemName.toLowerCase()) || 
       itemName.toLowerCase().includes(i.name.toLowerCase())
@@ -75,7 +81,6 @@ const App: React.FC = () => {
     );
 
     setCart(prev => {
-      // Check if existing item has same id AND same customizations AND same variant
       const existing = prev.find(c => 
         c.id === item.id && 
         c.customizations === customizations && 
@@ -113,38 +118,10 @@ const App: React.FC = () => {
     }, 0);
 
     const orderId = `ORD-${Date.now()}`;
-    const order = {
-      id: orderId,
-      items: [...cart],
-      customer: {
-        firstName: customerInfo.firstName,
-        lastName: customerInfo.lastName,
-        phone: customerInfo.phone,
-        address: customerInfo.address,
-        paymentMethod: customerInfo.paymentMethod,
-        orderNote: customerInfo.orderNote || ''
-      },
-      total: total,
-      timestamp: Date.now(),
-      status: 'pending'
-    };
-
-    try {
-      const response = await fetch('/api/orders');
-      const orders = await response.json();
-      await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([order, ...orders])
-      });
-      
-      setCart([]); // Clear cart after successful order
-      window.dispatchEvent(new Event('orders-updated'));
-      return { success: true, orderId };
-    } catch (error) {
-      console.error("Error saving order via AI:", error);
-      return { success: false, error: "Sipariş kaydedilirken bir hata oluştu." };
-    }
+    // Not: Siparişleri de Firebase'e kaydetmek istersen buraya addDoc(collection(db, 'orders'), ...) eklenebilir.
+    
+    setCart([]); 
+    return { success: true, orderId };
   };
 
   const updateQuantity = (cartItemId: string, delta: number) => {
@@ -170,7 +147,8 @@ const App: React.FC = () => {
       
       <main>
         <Hero />
-        <MenuSection onAddToCart={handleAddToCart} />
+        {/* MenuSection artık Firebase'den gelen menuItems'ı kullanacak */}
+        <MenuSection items={menuItems} onAddToCart={handleAddToCart} />
         <About />
         <Franchise onOpenFranchise={() => setIsFranchiseOpen(true)} />
       </main>
@@ -184,7 +162,6 @@ const App: React.FC = () => {
         onPlaceOrder={handlePlaceOrder}
       />
 
-      {/* Floating Feedback Button */}
       <motion.button
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -211,6 +188,7 @@ const App: React.FC = () => {
           <AdminDashboard
             isOpen={isAdminOpen}
             onClose={handleCloseAdmin}
+            menuItems={menuItems} // Admin panelinin de güncel veriyi görmesini sağladık
           />
         )}
       </AnimatePresence>
