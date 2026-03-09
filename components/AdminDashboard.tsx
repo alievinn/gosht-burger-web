@@ -1,4 +1,5 @@
-
+import { db } from '../services/firebase';
+import { collection, doc, setDoc, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Save, Lock, ShoppingBag, PieChart, Edit2, Upload, Filter, Clock, Calendar, ChevronDown, ChevronUp, Mail, MessageSquare, LogOut, Building2, Phone, Star, TrendingUp, Ticket, CheckCircle2, AlertCircle } from 'lucide-react';
 import { MenuItem, Category, Order, SiteSettings, ContactMessage, FranchiseApplication, LoyaltyAccount, Feedback, Coupon } from '../types';
@@ -118,7 +119,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
       const loadInitialData = async () => {
         try {
           // Load Menu
-          const menuRes = await fetch('/api/menu');
+         const menuSnap = await getDocs(collection(db, 'products'));
           const menuData = await menuRes.json();
           if (menuData) {
             setItems(menuData);
@@ -2174,9 +2175,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
             <div className="text-stone-600 text-[10px] text-center p-8 border-t border-stone-900 mt-12 uppercase tracking-[0.2em]">
               Gosht Burger Premium Yönetim Sistemi &copy; 2024
             </div>
-          </div>
+         </div>
         )}
       </div>
     </motion.div>
   );
 };
+
+export default AdminDashboard;
