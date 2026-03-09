@@ -1,5 +1,5 @@
 import React from 'react';
-
+import logoImg from '../logo.png';
 interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
@@ -48,15 +48,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "", size = 'md' }) => {
   }
 
   return (
-    <div className={`flex items-center ${className} drop-shadow-2xl`}>
-      <div className="flex flex-col items-center justify-center leading-none">
-        <span className={`${currentSize.text} font-black serif tracking-tighter text-white drop-shadow-2xl`}>
-          GOSHT
-        </span>
-        <span className={`${currentSize.burgerText} font-bold serif text-red-600 uppercase tracking-[0.3em] mt-1`}>
-          BURGER
-        </span>
-      </div>
-    </div>
-  );
-};
+  <div className={`flex items-center ${className} drop-shadow-2xl`}>
+    <img src={logoImg} alt="Gosht Logo" className={`${currentSize.img} w-auto object-contain`} />
+  </div>
+);
