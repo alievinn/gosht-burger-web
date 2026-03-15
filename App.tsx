@@ -33,6 +33,7 @@ const App: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
+   const [siteSettings, setSiteSettings] = useState<any>({});
   
   // İlk başta menüyü boş bir dizi yapıyoruz, Firebase'den dolacak
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -47,24 +48,23 @@ const App: React.FC = () => {
   }, [location]);
 
 // --- GERÇEK ZAMANLI VERİ ÇEKME (FİNAL) ---
-  useEffect(() => {
-    // 1. Menü Ürünlerini Dinle
-    const q = query(collection(db, 'products'));
-    const unsubscribeMenu = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const items = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as MenuItem[];
-        setMenuItems(items);
-      } else {
-        // Firebase boşsa varsayılanları göster ki ekran siyah kalmasın
-        setMenuItems(MENU_ITEMS);
-      }
-    }, (error) => {
-      console.error("Menü çekme hatası:", error);
+useEffect(() => {
+  // 1. Menü Ürünlerini Dinle
+  const q = query(collection(db, 'products'));
+  const unsubscribeMenu = onSnapshot(q, (snapshot) => {
+    if (!snapshot.empty) {
+      const items = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as MenuItem[];
+      setMenuItems(items);
+    } else {
       setMenuItems(MENU_ITEMS);
-    });
+    }
+  }, (error) => {
+    console.error("Menü çekme hatası:", error);
+    setMenuItems(MENU_ITEMS);
+  });
 
     // 2. Ayarları ve Logoyu Dinle
     const settingsRef = doc(db, 'settings', 'siteConfig');
@@ -72,7 +72,7 @@ const App: React.FC = () => {
       if (snapshot.exists()) {
         const data = snapshot.data();
         // siteSettings state'ini güncelle
-       const [siteSettings, setSiteSettings] = useState<any>({});
+      
       }
     });
 
