@@ -1,3 +1,6 @@
+import { db } from './services/firebase'; 
+import { collection, query, onSnapshot, doc } from 'firebase/firestore'; 
+import { MENU_ITEMS } from './constants'; // Bu satırı kontrol et, yolu doğru olmalı
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -16,11 +19,14 @@ import { CartItem, MenuItem } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare } from 'lucide-react';
 
-// --- FIREBASE BAĞLANTISI ---
-import { db } from './services/firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 const App: React.FC = () => {
+  const handleCloseAdmin = () => {
+    setIsAdminOpen(false);
+    if (location.pathname === '/admin') {
+      navigate('/');
+    }
+  };
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -40,25 +46,41 @@ const App: React.FC = () => {
     }
   }, [location]);
 
-  // --- GERÇEK ZAMANLI VERİ ÇEKME (FIRESTORE) ---
-useEffect(() => {
-    // Logo ayarını canlı dinle
-    const logoRef = doc(db, 'settings', 'logo');
-    const unsubscribe = onSnapshot(logoRef, (doc) => {
-      if (doc.exists()) {
-        // Global logo state'ini veya CSS değişkenini güncelle
-        const newLogo = doc.data().logo;
-        // Eğer bir state kullanıyorsan onu setle
+// --- GERÇEK ZAMANLI VERİ ÇEKME (FİNAL) ---
+  useEffect(() => {
+    // 1. Menü Ürünlerini Dinle
+    const q = query(collection(db, 'products'));
+    const unsubscribeMenu = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const items = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as MenuItem[];
+        setMenuItems(items);
+      } else {
+        // Firebase boşsa varsayılanları göster ki ekran siyah kalmasın
+        setMenuItems(MENU_ITEMS);
+      }
+    }, (error) => {
+      console.error("Menü çekme hatası:", error);
+      setMenuItems(MENU_ITEMS);
+    });
+
+    // 2. Ayarları ve Logoyu Dinle
+    const settingsRef = doc(db, 'settings', 'siteConfig');
+    const unsubscribeSettings = onSnapshot(settingsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        // siteSettings state'ini güncelle
+       const [siteSettings, setSiteSettings] = useState<any>({});
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeMenu();
+      unsubscribeSettings();
+    };
   }, []);
-  const handleCloseAdmin = () => {
-    setIsAdminOpen(false);
-    if (location.pathname === '/admin') {
-      navigate('/');
-    }
-  };
 
   const handleAddToCart = (itemName: string, quantity: number, customizations?: string, variantInfo?: string): boolean => {
     const item = menuItems.find(i => 
