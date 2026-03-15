@@ -309,17 +309,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64String = reader.result as string;
+        setSiteLogo(base64String); // Ekranda göster
+        
         try {
-          await fetch('/api/logo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ logo: base64String })
-          });
-          setSiteLogo(base64String);
+          // Doğrudan Firebase'e yaz
+          await setDoc(doc(db, 'settings', 'logo'), { logo: base64String });
           window.dispatchEvent(new Event('logo-updated'));
-          alert('Logo güncellendi!');
-        } catch (error) {
-          alert('Logo yüklenirken hata oluştu.');
+          console.log("Logo Firebase'e yüklendi!");
+        } catch (err) {
+          console.error("Logo yükleme hatası:", err);
         }
       };
       reader.readAsDataURL(file);
@@ -344,29 +342,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
   const saveSettings = async () => {
     try {
-      await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(siteSettings)
-      });
+      // Tüm site ayarlarını (mail, logo, telefon vb.) tek bir dökümanda tutuyoruz
+      const settingsRef = doc(db, 'settings', 'siteConfig');
+      await setDoc(settingsRef, siteSettings);
+      
+      // Eğer logo değiştiyse onu da ayrıca kaydet
+      if (siteLogo) {
+        await setDoc(doc(db, 'settings', 'logo'), { logo: siteLogo });
+      }
+
       window.dispatchEvent(new Event('settings-updated'));
-      alert('Ayarlar başarıyla kaydedildi!');
+      window.dispatchEvent(new Event('logo-updated'));
+      alert('Tüm ayarlar Batman sunucusuna (Firebase) kaydedildi!');
     } catch (error) {
-      alert('Ayarlar kaydedilirken hata oluştu.');
+      console.error("Ayarlar kayıt hatası:", error);
+      alert('Ayarlar kaydedilemedi kanka.');
     }
   };
 
-  const saveChanges = async (updatedItems: MenuItem[]) => {
+ const saveChanges = async (updatedItems: MenuItem[]) => {
     setItems(updatedItems);
     try {
-      await fetch('/api/menu', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedItems)
-      });
+      // Firebase'deki her bir ürünü döküman olarak güncelliyoruz
+      const batchPromises = updatedItems.map(item => 
+        setDoc(doc(db, 'products', item.id), item)
+      );
+      await Promise.all(batchPromises);
+      
+      // Ayrıca genel menü listesini de güncelle
+      await setDoc(doc(db, 'settings', 'menu'), { items: updatedItems });
+      
       window.dispatchEvent(new Event('menu-updated'));
+      console.log("Menü Firebase'e başarıyla yazıldı!");
     } catch (error) {
-      console.error("Error saving menu:", error);
+      console.error("Menü kayıt hatası:", error);
     }
   };
 
@@ -389,10 +398,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Bu ürünü silmek istediğinize emin misiniz?')) {
       const updated = items.filter(item => item.id !== id);
-      saveChanges(updated);
+      setItems(updated);
+      try {
+        await deleteDoc(doc(db, 'products', id)); // Buluttan siler
+        await saveChanges(updated); // Listeyi günceller
+      } catch (e) {
+        console.error("Silme hatası:", e);
+      }
     }
   };
 

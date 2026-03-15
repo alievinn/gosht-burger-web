@@ -41,25 +41,18 @@ const App: React.FC = () => {
   }, [location]);
 
   // --- GERÇEK ZAMANLI VERİ ÇEKME (FIRESTORE) ---
-  useEffect(() => {
-    // 'products' koleksiyonuna bağlan ve verileri çek
-    const q = query(collection(db, 'products'));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as MenuItem[];
-      
-      setMenuItems(items);
-      console.log("Batman'dan veriler güncellendi:", items);
-    }, (error) => {
-      console.error("Firebase veri çekme hatası:", error);
+useEffect(() => {
+    // Logo ayarını canlı dinle
+    const logoRef = doc(db, 'settings', 'logo');
+    const unsubscribe = onSnapshot(logoRef, (doc) => {
+      if (doc.exists()) {
+        // Global logo state'ini veya CSS değişkenini güncelle
+        const newLogo = doc.data().logo;
+        // Eğer bir state kullanıyorsan onu setle
+      }
     });
-
-    return () => unsubscribe(); // Bağlantıyı temizle
+    return () => unsubscribe();
   }, []);
-
   const handleCloseAdmin = () => {
     setIsAdminOpen(false);
     if (location.pathname === '/admin') {
