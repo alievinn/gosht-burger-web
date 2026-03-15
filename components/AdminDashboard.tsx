@@ -1,3 +1,4 @@
+
 import { db } from '../services/firebase';
 import { collection, doc, setDoc, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import React, { useState, useEffect } from 'react';
@@ -9,6 +10,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface AdminDashboardProps {
   isOpen: boolean;
   onClose: () => void;
+  menuItems: MenuItem[]; // İşte bu satırı eklemen lazım kanka
 }
 
 type AdminTab = 'menu' | 'orders' | 'accounting' | 'settings' | 'messages' | 'franchise' | 'loyalty' | 'feedbacks' | 'campaigns';
@@ -61,12 +63,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     franchiseWhyTitle: 'Neden Gosht Burger?',
     franchiseImage: null,
     contactPhone: '0507 864 16 72',
-    contactEmail: 'info@goshtburger.com',
+    contactEmail: 'goshtburger1@gmail.com',
     contactAddress: 'Gap Mah. Cafeler Cd.\nMerkez, Batman',
     whatsappNumber: '905078641672',
     instagramUrl: 'https://www.instagram.com/goshtburger',
     tiktokUrl: 'https://www.tiktok.com/@goshtburger',
-    heroTitle: 'GERÇEK ET. GERÇEK ATEŞ.',
+    heroTitle: 'GERÇEK ET. GERÇEK LEZZET.',
     heroSubtitle: 'Batman\'ın kalbinde, %100 dana döş etinden hazırlanan gurme burger deneyimi.',
     heroCtaText: 'MENÜYÜ KEŞFET',
     footerDescription: 'Batman\'da doğan, premium, ateşle buluşan gerçek et deneyimi sunan bir markayız. Burgerlerimizde marul, domates gibi taze yeşillik bulunmadığını, bunun yerine imza "Közmix" (közlenmiş biber & patlıcan) kullandığımızı vurgularız.',
@@ -120,8 +122,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
         try {
           // Load Menu
          const menuSnap = await getDocs(collection(db, 'products'));
-          const menuData = await menuRes.json();
-          if (menuData) {
+          // 124. satırdaki menuSnap kalsın, altına şunu yaz:
+          const menuData = menuSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MenuItem[];
+          
+          if (menuData.length > 0) {
             setItems(menuData);
           } else {
             setItems(MENU_ITEMS);

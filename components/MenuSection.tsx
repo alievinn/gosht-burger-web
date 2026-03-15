@@ -7,12 +7,17 @@ import { motion } from 'motion/react';
 
 interface MenuSectionProps {
   onAddToCart: (itemName: string, quantity: number, customizations?: string, variantId?: string) => boolean;
+  items: MenuItem[]; // İşte bu satırı ekledik kanka
 }
 
-export const MenuSection: React.FC<MenuSectionProps> = ({ onAddToCart }) => {
-  const [items, setItems] = useState<MenuItem[]>(MENU_ITEMS);
+export const MenuSection: React.FC<MenuSectionProps> = ({ onAddToCart, items }) => {
+  // Artık 'items' doğrudan App.tsx'den (Firebase'den) geliyor.
+  // Aşağıdaki state'ler sadece buton efektleri ve varyant seçimleri için kalmalı:
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  // ESKİ loadItems VE useEffect BLOĞUNU TAMAMEN SİLEBİLİRSİN.
+  // Çünkü veriler artık yukarıdaki 'items' değişkeninin içinde hazır geliyor.
 
   const loadItems = async () => {
     try {
