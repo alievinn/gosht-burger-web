@@ -33,10 +33,11 @@ const App: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
-   const [siteSettings, setSiteSettings] = useState<any>({});
+   
   
   // İlk başta menüyü boş bir dizi yapıyoruz, Firebase'den dolacak
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [siteSettings, setSiteSettings] = useState<any>({});
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -47,9 +48,13 @@ const App: React.FC = () => {
     }
   }, [location]);
 
-// --- GERÇEK ZAMANLI VERİ ÇEKME (FİNAL) ---
+// --- 1. STATE TANIMLARI (Bileşenin en üstünde, useEffect dışında olmalı) ---
+const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+setSiteSettings(data);
+
+// --- 2. GERÇEK ZAMANLI VERİ ÇEKME ---
 useEffect(() => {
-  // 1. Menü Ürünlerini Dinle
+  // Menü Ürünlerini Dinle
   const q = query(collection(db, 'products'));
   const unsubscribeMenu = onSnapshot(q, (snapshot) => {
     if (!snapshot.empty) {
@@ -66,21 +71,21 @@ useEffect(() => {
     setMenuItems(MENU_ITEMS);
   });
 
-    // 2. Ayarları ve Logoyu Dinle
-    const settingsRef = doc(db, 'settings', 'siteConfig');
-    const unsubscribeSettings = onSnapshot(settingsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        // siteSettings state'ini güncelle
-      
-      }
-    });
+  // Ayarları Dinle
+  const settingsRef = doc(db, 'settings', 'siteConfig');
+  const unsubscribeSettings = onSnapshot(settingsRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      // useState'i burada SADECE güncelliyoruz, tanımlamıyoruz!
+      setSiteSettings(data);
+    }
+  });
 
-    return () => {
-      unsubscribeMenu();
-      unsubscribeSettings();
-    };
-  }, []);
+  return () => {
+    unsubscribeMenu();
+    unsubscribeSettings();
+  };
+}, []);
 
   const handleAddToCart = (itemName: string, quantity: number, customizations?: string, variantInfo?: string): boolean => {
     const item = menuItems.find(i => 
