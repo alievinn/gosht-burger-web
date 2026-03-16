@@ -43,19 +43,17 @@ const App: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (location.pathname === '/admin') {
+    if (location.pathname === '/gosht-yonetim-2026') {
       setIsAdminOpen(true);
     }
   }, [location]);
 
-// --- 1. STATE TANIMLARI (Bileşenin en üstünde, useEffect dışında olmalı) ---
-const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-setSiteSettings(data);
 
 // --- 2. GERÇEK ZAMANLI VERİ ÇEKME ---
 useEffect(() => {
   // Menü Ürünlerini Dinle
   const q = query(collection(db, 'products'));
+
   const unsubscribeMenu = onSnapshot(q, (snapshot) => {
     if (!snapshot.empty) {
       const items = snapshot.docs.map(doc => ({
