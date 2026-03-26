@@ -16,112 +16,18 @@ interface AdminDashboardProps {
 type AdminTab = 'menu' | 'orders' | 'accounting' | 'settings' | 'messages' | 'franchise' | 'loyalty' | 'feedbacks' | 'campaigns';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
-  // --- ÖNEMLİ: Aşağıdaki isOpen ve onClose tanımlarını SİL, sadece bunları tut ---
   const [activeTab, setActiveTab] = useState<AdminTab>('menu');
-  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  const auth = getAuth();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Giriş durumunu kontrol et
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) setIsAuthenticated(true);
-    });
-    return () => unsubscribe();
-  }, [auth]);
+    const savedAuth = localStorage.getItem('admin_auth') === 'true';
+    if (savedAuth) setIsAuthenticated(true);
+  }, []);
 
-  // Verileri Firebase'den çek
-  useEffect(() => {
-    if (user && isOpen) {
-      const q = query(collection(db, 'products'));
-      const unsub = onSnapshot(q, (snapshot) => {
-        const itemsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MenuItem[];
-        setItems(itemsList);
-        setLoading(false);
-      });
-      return () => unsub();
-    }
-  }, [user, isOpen]);
-
-  // Giriş Fonksiyonu
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    try {
-      await signInWithEmailAndPassword(auth, username, password);
-    } catch (error) {
-      setError("Hatalı e-posta veya şifre!");
-    }
-  };
-
-  // EĞER GİRİŞ YAPILMAMIŞSA GÖSTERİLECEK PANEL
-  if (!user && isOpen) {
-    return (
-      <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 text-white p-4 backdrop-blur-sm">
-        <form onSubmit={handleLogin} className="bg-zinc-900 p-8 rounded-2xl border border-orange-600/50 w-full max-w-md shadow-2xl shadow-orange-900/20">
-          <div className="flex justify-center mb-6">
-            <div className="bg-orange-600 p-3 rounded-full">
-              <Lock size={32} className="text-white" />
-            </div>
-          </div>
-          <h2 className="text-2xl font-black mb-6 text-orange-500 text-center uppercase tracking-widest">GOSHT ADMIN</h2>
-          
-          <div className="space-y-4">
-            <input 
-              type="email" 
-              placeholder="E-posta" 
-              className="w-full p-4 bg-black border border-zinc-800 rounded-xl focus:border-orange-500 outline-none transition-all"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input 
-              type="password" 
-              placeholder="Şifre" 
-              className="w-full p-4 bg-black border border-zinc-800 rounded-xl focus:border-orange-500 outline-none transition-all"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && <p className="text-red-500 mt-4 text-center text-sm font-medium">{error}</p>}
-          
-          <button type="submit" className="w-full bg-orange-600 p-4 mt-6 rounded-xl font-bold hover:bg-orange-700 active:scale-95 transition-all uppercase tracking-wider">
-            Sisteme Giriş Yap
-          </button>
-          
-          <button type="button" onClick={onClose} className="w-full mt-4 text-zinc-500 text-sm hover:text-white transition-colors cursor-pointer">
-            Vazgeç
-          </button>
-        </form>
-      </div>
-    );
-  }
-
-  // BURADAN SONRASI SENİN KENDİ 2300 SATIRLIK ORİJİNAL KODUN DEVAM EDİYOR...
-
-  // BURADAN SONRA PANELİN GERÇEK İÇERİĞİ (TABS, LİSTELER VB.) BAŞLAR...
-  return (
-    <div className={`fixed inset-0 z-50 bg-black ${isOpen ? 'block' : 'hidden'}`}>
-       {/* Senin mevcut admin paneli tasarımın buraya gelecek */}
-       <div className="p-8">
-          <h1 className="text-white">Hoş geldin Patron!</h1>
-          <button onClick={() => auth.signOut()} className="text-orange-500">Çıkış Yap</button>
-          {/* ... panel içeriği ... */}
-       </div>
-    </div>
-  );
-};
-  
   // Menu State
   const [items, setItems] = useState<MenuItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -216,7 +122,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
   // Load data on mount
   useEffect(() => {
-    if (open) {
+    if (isOpen) {
       const loadInitialData = async () => {
         try {
           // Load Menu
@@ -304,7 +210,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
       return () => clearInterval(pollInterval);
     }
-  }, [open, lastOrderCount]);
+  }, [isOpen, lastOrderCount]);
 
   useEffect(() => {
     const handleRefresh = async () => {
@@ -480,9 +386,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim().toLowerCase() === 'gosht' && password.trim().toLowerCase() === 'gosht2024') {
-      setIsAuthenticated(true);
+
+    if (
+      username.trim().toLowerCase() === 'gosht' &&
+      password.trim() === 'gosht2024'
+    ) {
       localStorage.setItem('admin_auth', 'true');
+      setIsAuthenticated(true);
     } else {
       alert('Hatalı kullanıcı adı veya şifre!');
     }
@@ -769,7 +679,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-stone-950">
-        {!isAuthenticated ? (
+        {!setIsAuthenticated ? (
           <div className="flex flex-col items-center justify-center min-h-full p-6">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -2299,18 +2209,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     </motion.div>
   
   );
- 
 };
+
 export default AdminDashboard;
-function setIsAuthenticated(arg0: boolean) {
-  throw new Error("Function not implemented.");
-}
-
-function setUsername(arg0: string) {
-  throw new Error("Function not implemented.");
-}
-
-function setPassword(arg0: string) {
-  throw new Error("Function not implemented.");
-}
-
