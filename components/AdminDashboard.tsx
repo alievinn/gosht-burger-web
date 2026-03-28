@@ -1,19 +1,70 @@
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import { db } from '../services/firebase';
-import { collection, doc, setDoc, addDoc, updateDoc, deleteDoc, getDocs, query, onSnapshot, orderBy } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  onSnapshot,
+  orderBy
+} from 'firebase/firestore';
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save, Lock, ShoppingBag, PieChart, Edit2, Upload, Filter, Clock, Calendar, ChevronDown, ChevronUp, Mail, MessageSquare, LogOut, Building2, Phone, Star, TrendingUp, Ticket, CheckCircle2, AlertCircle } from 'lucide-react';
-import { MenuItem, Category, Order, SiteSettings, ContactMessage, FranchiseApplication, LoyaltyAccount, Feedback, Coupon } from '../types';
+import {
+  X,
+  Plus,
+  Trash2,
+  Save,
+  Lock,
+  ShoppingBag,
+  PieChart,
+  Edit2,
+  Upload,
+  Filter,
+  Clock,
+  Calendar,
+  ChevronDown,
+  Mail,
+  MessageSquare,
+  LogOut,
+  Building2,
+  Phone,
+  Star,
+  TrendingUp,
+  Ticket
+} from 'lucide-react';
+import {
+  MenuItem,
+  Category,
+  Order,
+  SiteSettings,
+  ContactMessage,
+  FranchiseApplication,
+  LoyaltyAccount,
+  Feedback,
+  Coupon
+} from '../types';
 import { MENU_ITEMS } from '../constants';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 
 interface AdminDashboardProps {
   isOpen: boolean;
   onClose: () => void;
-  menuItems?: MenuItem[]; 
+  menuItems?: MenuItem[];
 }
 
-type AdminTab = 'menu' | 'orders' | 'accounting' | 'settings' | 'messages' | 'franchise' | 'loyalty' | 'feedbacks' | 'campaigns';
+type AdminTab =
+  | 'menu'
+  | 'orders'
+  | 'accounting'
+  | 'settings'
+  | 'messages'
+  | 'franchise'
+  | 'loyalty'
+  | 'feedbacks'
+  | 'campaigns';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('menu');
@@ -122,110 +173,138 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
   // Load data on mount
   useEffect(() => {
-    if (isOpen) {
-      const loadInitialData = async () => {
+    if (!isOpen) return;
+
+    const loadInitialData = async () => {
+      try {
+        const menuSnap = await getDocs(collection(db, 'products'));
+        const menuData = menuSnap.docs.map((docItem) => ({
+          id: docItem.id,
+          ...docItem.data()
+        })) as MenuItem[];
+
+        if (menuData.length > 0) {
+          setItems(menuData);
+        } else {
+          setItems(MENU_ITEMS);
+        }
+
         try {
-          // Load Menu
-         const menuSnap = await getDocs(collection(db, 'products'));
-          // 124. satırdaki menuSnap kalsın, altına şunu yaz:
-          const menuData = menuSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MenuItem[];
-          
-          if (menuData.length > 0) {
-            setItems(menuData);
-          } else {
-            setItems(MENU_ITEMS);
-          }
-
-          // Load Orders
-          const ordersRes = await fetch('/api/orders');
-          const ordersData = await ordersRes.json();
-          setOrders(ordersData);
-          setLastOrderCount(ordersData.length);
-
-          // Load Logo
           const logoRes = await fetch('/api/logo');
           const logoData = await logoRes.json();
           setSiteLogo(logoData.logo);
+        } catch (e) {
+          console.error('Logo load error:', e);
+        }
 
-          // Load Hero BG
+        try {
           const heroBgRes = await fetch('/api/hero-bg');
           const heroBgData = await heroBgRes.json();
           setHeroBg(heroBgData.heroBg);
+        } catch (e) {
+          console.error('Hero background load error:', e);
+        }
 
-          // Load Settings
+        try {
           const settingsRes = await fetch('/api/settings');
           const settingsData = await settingsRes.json();
           if (settingsData) {
-            setSiteSettings(prev => ({
+            setSiteSettings((prev) => ({
               ...prev,
               ...settingsData
             }));
           }
-
-          // Load Messages
-          const messagesRes = await fetch('/api/messages');
-          const messagesData = await messagesRes.json();
-          setMessages(messagesData);
-
-          // Load Franchise Applications
-          const franchiseRes = await fetch('/api/franchise');
-          const franchiseData = await franchiseRes.json();
-          setFranchiseApps(franchiseData);
-
-          // Load Loyalty Accounts
-          const loyaltyRes = await fetch('/api/loyalty');
-          const loyaltyData = await loyaltyRes.json();
-          setLoyaltyAccounts(loyaltyData);
-
-          // Load Feedbacks
-          const feedbacksRes = await fetch('/api/feedbacks');
-          const feedbacksData = await feedbacksRes.json();
-          setFeedbacks(feedbacksData);
-
-          // Load Coupons
-          const couponsRes = await fetch('/api/coupons');
-          const couponsData = await couponsRes.json();
-          setCoupons(couponsData);
-        } catch (error) {
-          console.error("Error loading admin data:", error);
-        }
-      };
-      
-      loadInitialData();
-
-      // Polling for new orders every 30 seconds
-      const pollInterval = setInterval(async () => {
-        try {
-          const res = await fetch('/api/orders');
-          const data = await res.json();
-          if (data && data.length > lastOrderCount) {
-            setOrders(data);
-            setLastOrderCount(data.length);
-            playNotificationSound();
-          }
         } catch (e) {
-          console.error("Polling error:", e);
+          console.error('Settings load error:', e);
         }
-      }, 30000);
+      } catch (error) {
+        console.error('Error loading admin data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      return () => clearInterval(pollInterval);
-    }
-  }, [isOpen, lastOrderCount]);
+    loadInitialData();
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !isAuthenticated) return;
+
+    const ordersQuery = query(collection(db, 'orders'), orderBy('timestamp', 'desc'));
+    const messagesQuery = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
+    const franchiseQuery = query(collection(db, 'franchiseApplications'), orderBy('timestamp', 'desc'));
+    const loyaltyQuery = query(collection(db, 'loyaltyAccounts'), orderBy('points', 'desc'));
+    const feedbacksQuery = query(collection(db, 'feedbacks'), orderBy('timestamp', 'desc'));
+    const couponsQuery = query(collection(db, 'coupons'), orderBy('timestamp', 'desc'));
+
+    const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
+      const data = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
+      })) as Order[];
+
+      if (lastOrderCount > 0 && data.length > lastOrderCount) {
+        playNotificationSound();
+      }
+
+      setOrders(data);
+      setLastOrderCount(data.length);
+    });
+
+    const unsubMessages = onSnapshot(messagesQuery, (snapshot) => {
+      setMessages(snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
+      })) as ContactMessage[]);
+    });
+
+    const unsubFranchise = onSnapshot(franchiseQuery, (snapshot) => {
+      setFranchiseApps(snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
+      })) as FranchiseApplication[]);
+    });
+
+    const unsubLoyalty = onSnapshot(loyaltyQuery, (snapshot) => {
+      setLoyaltyAccounts(snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
+      })) as LoyaltyAccount[]);
+    });
+
+    const unsubFeedbacks = onSnapshot(feedbacksQuery, (snapshot) => {
+      setFeedbacks(snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
+      })) as Feedback[]);
+    });
+
+    const unsubCoupons = onSnapshot(couponsQuery, (snapshot) => {
+      setCoupons(snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
+      })) as Coupon[]);
+    });
+
+    return () => {
+      unsubOrders();
+      unsubMessages();
+      unsubFranchise();
+      unsubLoyalty();
+      unsubFeedbacks();
+      unsubCoupons();
+    };
+  }, [isOpen, isAuthenticated, lastOrderCount]);
 
   useEffect(() => {
     const handleRefresh = async () => {
       try {
-        const menuRes = await fetch('/api/menu');
-        const menuData = await menuRes.json();
-        if (menuData) setItems(menuData);
-
-        const ordersRes = await fetch('/api/orders');
-        const ordersData = await ordersRes.json();
-        if (ordersData.length > lastOrderCount) {
-          playNotificationSound();
-        }
-        setOrders(ordersData);
-        setLastOrderCount(ordersData.length);
+        const menuSnap = await getDocs(collection(db, 'products'));
+        const menuData = menuSnap.docs.map((docItem) => ({
+          id: docItem.id,
+          ...docItem.data()
+        })) as MenuItem[];
+        setItems(menuData.length > 0 ? menuData : MENU_ITEMS);
 
         const logoRes = await fetch('/api/logo');
         const logoData = await logoRes.json();
@@ -237,25 +316,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
         const settingsRes = await fetch('/api/settings');
         const settingsData = await settingsRes.json();
-        if (settingsData) setSiteSettings(settingsData);
+        if (settingsData) {
+          setSiteSettings((prev) => ({
+            ...prev,
+            ...settingsData
+          }));
+        }
       } catch (e) {
-        console.error("Refresh error:", e);
+        console.error('Refresh error:', e);
       }
     };
 
     window.addEventListener('menu-updated', handleRefresh);
-    window.addEventListener('orders-updated', handleRefresh);
     window.addEventListener('logo-updated', handleRefresh);
     window.addEventListener('hero-bg-updated', handleRefresh);
-    
+    window.addEventListener('settings-updated', handleRefresh);
+
     return () => {
       window.removeEventListener('menu-updated', handleRefresh);
-      window.removeEventListener('orders-updated', handleRefresh);
       window.removeEventListener('logo-updated', handleRefresh);
       window.removeEventListener('hero-bg-updated', handleRefresh);
+      window.removeEventListener('settings-updated', handleRefresh);
     };
   }, []);
-
   const handleHeroBgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -423,24 +506,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const deleteMessage = async (id: string) => {
     if (!confirm('Bu mesajı silmek istediğinize emin misiniz?')) return;
     try {
-      const res = await fetch(`/api/messages/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setMessages(prev => prev.filter(m => m.id !== id));
-      }
+      await deleteDoc(doc(db, 'messages', id));
+      setMessages((prev) => prev.filter((m) => m.id !== id));
     } catch (e) {
-      console.error("Error deleting message:", e);
+      console.error('Error deleting message:', e);
     }
   };
 
   const deleteFranchiseApp = async (id: string) => {
     if (!confirm('Bu başvuruyu silmek istediğinize emin misiniz?')) return;
     try {
-      const res = await fetch(`/api/franchise/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setFranchiseApps(prev => prev.filter(a => a.id !== id));
-      }
+      await deleteDoc(doc(db, 'franchiseApplications', id));
+      setFranchiseApps((prev) => prev.filter((a) => a.id !== id));
     } catch (e) {
-      console.error("Error deleting franchise application:", e);
+      console.error('Error deleting franchise application:', e);
     }
   };
 
@@ -515,22 +594,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   };
 
   const updateOrderStatus = async (orderId: string, status: 'pending' | 'completed' | 'cancelled') => {
-    const updatedOrders = orders.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    );
-    
-    setOrders(updatedOrders);
-    
     try {
-      await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedOrders)
-      });
-      window.dispatchEvent(new Event('orders-updated'));
+      await updateDoc(doc(db, 'orders', orderId), { status });
+      setOrders((prev) =>
+        prev.map((order) => (order.id === orderId ? { ...order, status } : order))
+      );
     } catch (error) {
-      console.error("Error updating order status:", error);
-      alert("Sipariş durumu güncellenirken hata oluştu.");
+      console.error('Error updating order status:', error);
+      alert('Sipariş durumu güncellenirken hata oluştu.');
     }
   };
 
@@ -679,7 +750,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-stone-950">
-        {!setIsAuthenticated ? (
+        {!isAuthenticated ? (
           <div className="flex flex-col items-center justify-center min-h-full p-6">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -1434,8 +1505,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                             <button 
                               onClick={async () => {
                                 if (window.confirm('Bu geri bildirimi silmek istediğinize emin misiniz?')) {
-                                  await fetch(`/api/feedbacks/${feedback.id}`, { method: 'DELETE' });
-                                  setFeedbacks(prev => prev.filter(f => f.id !== feedback.id));
+                                  await deleteDoc(doc(db, 'feedbacks', feedback.id));
+                                  setFeedbacks((prev) => prev.filter((f) => f.id !== feedback.id));
                                 }
                               }}
                               className="w-12 h-12 bg-stone-950 text-stone-600 hover:text-red-500 rounded-2xl flex items-center justify-center border border-white/5 transition-all"
@@ -1556,27 +1627,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                         isActive: true,
                         timestamp: Date.now()
                       };
-                      const res = await fetch('/api/coupons', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(coupon)
+                      await addDoc(collection(db, 'coupons'), coupon);
+                      setCoupons((prev) => [...prev, coupon]);
+                      setNewCoupon({
+                        code: '',
+                        discountType: 'percentage',
+                        discountValue: 0,
+                        minOrderAmount: 0,
+                        startDate: '',
+                        endDate: '',
+                        usageLimit: 0,
+                        isActive: true
                       });
-                      if (res.ok) {
-                        setCoupons(prev => [...prev, coupon]);
-                        setNewCoupon({ 
-                          code: '', 
-                          discountType: 'percentage', 
-                          discountValue: 0, 
-                          minOrderAmount: 0, 
-                          startDate: '', 
-                          endDate: '', 
-                          usageLimit: 0, 
-                          isActive: true 
-                        });
-                      } else {
-                        const err = await res.json();
-                        alert(err.error || "Hata oluştu");
-                      }
                     }}
                     className="mt-8 bg-red-900 text-white px-10 py-4 rounded-xl text-xs uppercase tracking-[0.2em] font-bold hover:bg-red-800 transition-all shadow-xl shadow-red-950/30"
                   >
@@ -1603,8 +1665,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
                             <button 
                               onClick={async () => {
                                 if (window.confirm('Bu kuponu silmek istediğinize emin misiniz?')) {
-                                  await fetch(`/api/coupons/${coupon.id}`, { method: 'DELETE' });
-                                  setCoupons(prev => prev.filter(c => c.id !== coupon.id));
+                                  await deleteDoc(doc(db, 'coupons', coupon.id));
+                                  setCoupons((prev) => prev.filter((c) => c.id !== coupon.id));
                                 }
                               }}
                               className="text-stone-700 hover:text-red-500 transition-colors"
@@ -2209,6 +2271,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     </motion.div>
   
   );
+
+
 };
 
 export default AdminDashboard;
