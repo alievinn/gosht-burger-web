@@ -430,32 +430,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   };
   
 const saveSettings = async () => {
-  alert('SAVE CALISTI');
-
   try {
-    const settingsRef = doc(db, 'settings', 'siteConfig');
+    await setDoc(
+      doc(db, 'settings', 'siteConfig'),
+      {
+        footerDescription: 'ADMIN PANEL TEST 999',
+      },
+      { merge: true }
+    );
 
-    console.log('KAYDEDILEN siteSettings:', siteSettings);
-    alert(`footerDescription: ${siteSettings?.footerDescription || 'BOS'}`);
-
-    await setDoc(settingsRef, { ...siteSettings }, { merge: true });
-
-    if (siteLogo) {
-      await setDoc(doc(db, 'settings', 'logo'), { logo: siteLogo }, { merge: true });
-    }
-
-    if (heroBg) {
-      await setDoc(doc(db, 'settings', 'heroBg'), { heroBg }, { merge: true });
-    }
-
-    window.dispatchEvent(new Event('settings-updated'));
-    window.dispatchEvent(new Event('logo-updated'));
-    window.dispatchEvent(new Event('hero-bg-updated'));
-
-    alert('Ayarlar kaydedildi ✅');
+    alert('YAZDI ✅');
   } catch (error) {
-    console.error('Ayarlar kayıt hatası:', error);
-    alert('Ayarlar kaydedilemedi ❌');
+    console.error(error);
+    alert('YAZAMADI ❌');
   }
 };
  const saveChanges = async (updatedItems: MenuItem[]) => {
