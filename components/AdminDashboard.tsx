@@ -1,3 +1,4 @@
+console.log('DOGRU ADMINDASHBOARD CALISTI');
 import { db } from '../services/firebase';
 import {
   collection,
@@ -267,9 +268,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
     const unsubLoyalty = onSnapshot(loyaltyQuery, (snapshot) => {
       setLoyaltyAccounts(snapshot.docs.map((docItem) => ({
-        id: docItem.id,
-        ...docItem.data()
-      })) as LoyaltyAccount[]);
+          id: docItem.id,
+          ...docItem.data()
+        })) as unknown as LoyaltyAccount[]);
     });
 
     const unsubFeedbacks = onSnapshot(feedbacksQuery, (snapshot) => {
@@ -427,26 +428,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
       }
     }
   };
+  
+const saveSettings = async () => {
+  try {
+    const settingsRef = doc(db, 'settings', 'siteConfig');
 
-  const saveSettings = async () => {
-    try {
-      // Tüm site ayarlarını (mail, logo, telefon vb.) tek bir dökümanda tutuyoruz
-      const settingsRef = doc(db, 'settings', 'siteConfig');
-      await setDoc(settingsRef, siteSettings);
-      
-      // Eğer logo değiştiyse onu da ayrıca kaydet
-      if (siteLogo) {
-        await setDoc(doc(db, 'settings', 'logo'), { logo: siteLogo });
-      }
+    await setDoc(settingsRef, siteSettings, { merge: true });
 
-      window.dispatchEvent(new Event('settings-updated'));
-      window.dispatchEvent(new Event('logo-updated'));
-      alert('Tüm ayarlar Batman sunucusuna (Firebase) kaydedildi!');
-    } catch (error) {
-      console.error("Ayarlar kayıt hatası:", error);
-      alert('Ayarlar kaydedilemedi kanka.');
+    if (siteLogo) {
+      await setDoc(doc(db, 'settings', 'logo'), { logo: siteLogo }, { merge: true });
     }
-  };
+
+    if (heroBg) {
+      await setDoc(doc(db, 'settings', 'heroBg'), { heroBg }, { merge: true });
+    }
+
+    window.dispatchEvent(new Event('settings-updated'));
+    window.dispatchEvent(new Event('logo-updated'));
+    window.dispatchEvent(new Event('hero-bg-updated'));
+
+    alert('Ayarlar kaydedildi ✅');
+  } catch (error) {
+    console.error('Ayarlar kayıt hatası:', error);
+    alert('Ayarlar kaydedilemedi ❌');
+  }
+};
 
  const saveChanges = async (updatedItems: MenuItem[]) => {
     setItems(updatedItems);
