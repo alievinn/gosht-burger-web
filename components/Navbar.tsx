@@ -4,6 +4,8 @@ import { Menu, X, Instagram, Music, MessageCircle, ShoppingBag, Star } from 'luc
 import { Logo } from './Logo';
 import { SiteSettings } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 interface NavbarProps {
   cartCount?: number;
@@ -22,22 +24,16 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
     };
     window.addEventListener('scroll', handleScroll);
     
-    const fetchSettings = async () => {
-      try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
-        if (data) setSettings(data);
-      } catch (e) {
-        console.error("Error fetching settings:", e);
+    const settingsRef = doc(db, 'settings', 'siteConfig');
+    const unsubscribe = onSnapshot(settingsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setSettings(snapshot.data() as SiteSettings);
       }
-    };
-    fetchSettings();
+    }, (e) => console.error('Error fetching settings:', e));
 
-    window.addEventListener('settings-updated', fetchSettings);
-    
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('settings-updated', fetchSettings);
+      unsubscribe();
     };
   }, []);
 

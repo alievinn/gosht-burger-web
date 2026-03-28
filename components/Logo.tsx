@@ -1,4 +1,6 @@
 import React from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 interface LogoProps {
   className?: string;
@@ -9,23 +11,23 @@ export const Logo: React.FC<LogoProps> = ({ className = "", size = 'md' }) => {
   const [customLogo, setCustomLogo] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
-  const loadLogo = React.useCallback(async () => {
-    try {
-      const response = await fetch('/api/logo');
-      const data = await response.json();
-      if (data && data.logo) setCustomLogo(data.logo);
-    } catch (error) {
-      console.error("Error loading logo:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   React.useEffect(() => {
-    loadLogo();
-    window.addEventListener('logo-updated', loadLogo);
-    return () => window.removeEventListener('logo-updated', loadLogo);
-  }, [loadLogo]);
+    const logoRef = doc(db, 'settings', 'logo');
+    const unsubscribe = onSnapshot(
+      logoRef,
+      (snapshot) => {
+        const data = snapshot.data() as { logo?: string | null } | undefined;
+        setCustomLogo(data?.logo || null);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Error loading logo from Firestore:', error);
+        setIsLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   const sizes = {
     sm: { container: 'h-16', text: 'text-3xl', burgerText: 'text-[9px]', img: 'h-14' },

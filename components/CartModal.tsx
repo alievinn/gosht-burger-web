@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { X, Trash2, Plus, Minus, ArrowLeft, CheckCircle2, ShoppingBag, CreditCard, Wallet, Star, Search, Ticket, AlertCircle } from 'lucide-react';
 import { CartItem, Order, SiteSettings, LoyaltyAccount, Coupon } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -50,16 +52,13 @@ export const CartModal: React.FC<CartModalProps> = ({
   const finalTotal = Math.max(0, total - loyaltyDiscount - couponDiscount);
 
   React.useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
-        setSettings(data);
-      } catch (e) {
-        console.error("Error fetching settings:", e);
+    const settingsRef = doc(db, 'settings', 'siteConfig');
+    const unsubscribe = onSnapshot(settingsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setSettings(snapshot.data() as SiteSettings);
       }
-    };
-    fetchSettings();
+    }, (e) => console.error('Error fetching settings:', e));
+    return () => unsubscribe();
   }, []);
 
   const checkLoyalty = async () => {

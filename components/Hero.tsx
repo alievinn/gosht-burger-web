@@ -2,53 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SiteSettings } from '../types';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 export const Hero: React.FC = () => {
   const [heroBg, setHeroBg] = useState<string | null>(null);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    const fetchHeroBg = async () => {
-      try {
-        const res = await fetch('/api/hero-bg');
-        const data = await res.json();
-        if (data.heroBg) setHeroBg(data.heroBg);
-      } catch (e) {
-        console.error("Error fetching hero bg:", e);
+    const settingsRef = doc(db, 'settings', 'siteConfig');
+    const unsubscribe = onSnapshot(
+      settingsRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data() as SiteSettings & { heroBg?: string | null };
+          setSettings(data);
+          setHeroBg(data.heroBg || null);
+        }
+      },
+      (error) => {
+        console.error('Error fetching hero settings from Firestore:', error);
       }
-    };
-    
-    const fetchSettings = async () => {
-      try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
-        if (data) setSettings(data);
-      } catch (e) {
-        console.error("Error fetching settings:", e);
-      }
-    };
+    );
 
-    fetchHeroBg();
-    fetchSettings();
-    window.addEventListener('hero-bg-updated', fetchHeroBg);
-    window.addEventListener('settings-updated', fetchSettings);
-    return () => {
-      window.removeEventListener('hero-bg-updated', fetchHeroBg);
-      window.removeEventListener('settings-updated', fetchSettings);
-    };
+    return () => unsubscribe();
   }, []);
 
   return (
     <section id="home" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay */}
       <motion.div 
         initial={{ scale: 1.1 }}
         animate={{ scale: [1.1, 1.05, 1.1] }}
-        transition={{ 
-          duration: 20, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
-        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         className="absolute inset-0 z-0"
       >
         <img 
@@ -61,7 +46,6 @@ export const Hero: React.FC = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
       </motion.div>
 
-      {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
         <div className="flex flex-col items-center">
           <motion.div
@@ -109,18 +93,12 @@ export const Hero: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-6 justify-center items-center"
           >
-            <a 
-              href="#menu" 
-              className="group relative px-12 py-4 bg-red-900 text-white overflow-hidden transition-all hover:bg-red-800"
-            >
+            <a href="#menu" className="group relative px-12 py-4 bg-red-900 text-white overflow-hidden transition-all hover:bg-red-800">
               <span className="relative z-10 uppercase tracking-[0.2em] text-sm font-medium">{settings?.heroCtaText || 'Menüyü Keşfet'}</span>
               <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </a>
             
-            <a 
-              href="#about" 
-              className="group flex items-center gap-3 text-stone-300 hover:text-white transition-colors py-2"
-            >
+            <a href="#about" className="group flex items-center gap-3 text-stone-300 hover:text-white transition-colors py-2">
               <span className="uppercase tracking-[0.2em] text-sm font-medium border-b border-stone-700 group-hover:border-white transition-all">Hikayemiz</span>
               <Sparkles size={16} className="text-brand-red animate-pulse" />
             </a>

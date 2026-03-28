@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, ShieldCheck, Users, BookOpen, ArrowRight, Star } from 'lucide-react';
 import { SiteSettings } from '../types';
 import { motion } from 'motion/react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 interface FranchiseProps {
   onOpenFranchise: () => void;
@@ -11,18 +13,13 @@ export const Franchise: React.FC<FranchiseProps> = ({ onOpenFranchise }) => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
-        if (data) setSettings(data);
-      } catch (e) {
-        console.error("Error fetching settings:", e);
+    const settingsRef = doc(db, 'settings', 'siteConfig');
+    const unsubscribe = onSnapshot(settingsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setSettings(snapshot.data() as SiteSettings);
       }
-    };
-    fetchSettings();
-    window.addEventListener('settings-updated', fetchSettings);
-    return () => window.removeEventListener('settings-updated', fetchSettings);
+    }, (e) => console.error('Error fetching settings:', e));
+    return () => unsubscribe();
   }, []);
 
   const steps = [
