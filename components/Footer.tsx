@@ -8,6 +8,8 @@ import {
   Mail,
   ArrowUpRight,
 } from 'lucide-react';
+import { doc, onSnapshot, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { Logo } from './Logo';
 import { SiteSettings } from '../types';
 
@@ -23,22 +25,21 @@ export const Footer: React.FC = () => {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
-        if (data) setSettings(data);
-      } catch (e) {
-        console.error('Error fetching settings:', e);
+    const settingsRef = doc(db, 'settings', 'siteConfig');
+
+    const unsubscribe = onSnapshot(
+      settingsRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setSettings(snapshot.data() as SiteSettings);
+        }
+      },
+      (error) => {
+        console.error('Error fetching settings from Firestore:', error);
       }
-    };
+    );
 
-    fetchSettings();
-    window.addEventListener('settings-updated', fetchSettings);
-
-    return () => {
-      window.removeEventListener('settings-updated', fetchSettings);
-    };
+    return () => unsubscribe();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,25 +47,21 @@ export const Footer: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formState,
-          id: Date.now().toString(),
-          timestamp: Date.now(),
-        }),
+      await addDoc(collection(db, 'messages'), {
+        ...formState,
+        timestamp: Date.now(),
+        createdAt: serverTimestamp(),
+        isRead: false,
       });
 
-      if (res.ok) {
-        setSubmitStatus('success');
-        setFormState({ name: '', email: '', subject: '', message: '' });
-        setTimeout(() => setSubmitStatus('idle'), 3000);
-      } else {
-        setSubmitStatus('error');
-      }
+      setSubmitStatus('success');
+      setFormState({ name: '', email: '', subject: '', message: '' });
+
+      setTimeout(() => {
+        setSubmitStatus('idle');
+      }, 3000);
     } catch (e) {
-      console.error('Error sending message:', e);
+      console.error('Error sending message to Firestore:', e);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -100,7 +97,7 @@ export const Footer: React.FC = () => {
                 href={settings?.instagramUrl || 'https://www.instagram.com/goshtburger'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E4405F] text-white shadow-lg shadow-[#E4405F]/20 transition-all duration-500 group"
+                className="group flex h-12 w-12 items-center justify-center rounded-full bg-[#E4405F] text-white shadow-lg shadow-[#E4405F]/20 transition-all duration-500"
                 aria-label="Instagram"
               >
                 <Instagram size={20} className="transition-transform group-hover:scale-110" />
@@ -110,7 +107,7 @@ export const Footer: React.FC = () => {
                 href={settings?.tiktokUrl || 'https://www.tiktok.com/@goshtburger'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-stone-950 shadow-lg shadow-white/10 transition-all duration-500 group"
+                className="group flex h-12 w-12 items-center justify-center rounded-full bg-white text-stone-950 shadow-lg shadow-white/10 transition-all duration-500"
                 aria-label="TikTok"
               >
                 <Music size={20} className="transition-transform group-hover:scale-110" />
@@ -124,7 +121,7 @@ export const Footer: React.FC = () => {
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/20 transition-all duration-500 group"
+                className="group flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/20 transition-all duration-500"
                 aria-label="WhatsApp"
               >
                 <MessageCircle size={20} className="transition-transform group-hover:scale-110" />
