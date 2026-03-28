@@ -430,10 +430,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   };
   
 const saveSettings = async () => {
+  alert('SAVE CALISTI');
+
   try {
     const settingsRef = doc(db, 'settings', 'siteConfig');
 
-    await setDoc(settingsRef, siteSettings, { merge: true });
+    console.log('KAYDEDILEN siteSettings:', siteSettings);
+    alert(`footerDescription: ${siteSettings?.footerDescription || 'BOS'}`);
+
+    await setDoc(settingsRef, { ...siteSettings }, { merge: true });
 
     if (siteLogo) {
       await setDoc(doc(db, 'settings', 'logo'), { logo: siteLogo }, { merge: true });
@@ -453,7 +458,6 @@ const saveSettings = async () => {
     alert('Ayarlar kaydedilemedi ❌');
   }
 };
-
  const saveChanges = async (updatedItems: MenuItem[]) => {
     setItems(updatedItems);
     try {
