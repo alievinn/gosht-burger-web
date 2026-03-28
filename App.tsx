@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { collection, doc, onSnapshot, query } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare } from 'lucide-react';
@@ -18,7 +25,7 @@ import { FeedbackModal } from './components/FeedbackModal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { CartModal } from './components/CartModal';
 import { LoyaltyModal } from './components/LoyaltyModal';
-import { CartItem, MenuItem } from './types';
+import { CartItem, MenuItem, SiteSettings } from './types';
 
 const App: React.FC = () => {
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false);
@@ -28,7 +35,7 @@ const App: React.FC = () => {
   const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [, setSiteSettings] = useState<any>({});
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -71,11 +78,17 @@ const App: React.FC = () => {
     );
 
     const settingsRef = doc(db, 'settings', 'siteConfig');
-    const unsubscribeSettings = onSnapshot(settingsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setSiteSettings(snapshot.data());
+    const unsubscribeSettings = onSnapshot(
+      settingsRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setSiteSettings(snapshot.data() as SiteSettings);
+        }
+      },
+      (error) => {
+        console.error('Site ayarları çekme hatası:', error);
       }
-    });
+    );
 
     return () => {
       unsubscribeMenu();
@@ -150,10 +163,24 @@ const App: React.FC = () => {
     }, 0);
 
     const orderId = `ORD-${Date.now()}`;
-    console.log('Sipariş bilgisi:', { customerInfo, cart, total, orderId });
 
-    setCart([]);
-    return { success: true, orderId };
+    try {
+      await addDoc(collection(db, 'orders'), {
+        orderId,
+        customer: customerInfo,
+        items: cart,
+        total,
+        status: 'pending',
+        timestamp: Date.now(),
+        createdAt: serverTimestamp(),
+      });
+
+      setCart([]);
+      return { success: true, orderId };
+    } catch (error) {
+      console.error('Sipariş kaydetme hatası:', error);
+      return { success: false, error: 'Sipariş kaydedilemedi.' };
+    }
   };
 
   const updateQuantity = (cartItemId: string, delta: number) => {
