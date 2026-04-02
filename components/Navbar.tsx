@@ -42,7 +42,9 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
     { name: 'GOSHT MENÜ', href: '#menu' },
     { name: 'Hakkımızda', href: '#about' },
     { name: 'Franchise', href: '#franchise' },
+    { name: 'Şubelerimiz', href: '#branches' },
     { name: 'İletişim', href: '#contact' },
+    
   ];
 
   const socialLinks = [
