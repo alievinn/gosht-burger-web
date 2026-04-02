@@ -19,7 +19,6 @@ import { MenuSection } from './components/MenuSection';
 import { About } from './components/About';
 import { Franchise } from './components/Franchise';
 import { Footer } from './components/Footer';
-import { AiAssistant } from './components/AiAssistant';
 import { FranchiseModal } from './components/FranchiseModal';
 import { FeedbackModal } from './components/FeedbackModal';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -61,15 +60,11 @@ const App: React.FC = () => {
     const unsubscribeMenu = onSnapshot(
       productsQuery,
       (snapshot) => {
-        if (!snapshot.empty) {
-          const items = snapshot.docs.map((docItem) => ({
-            id: docItem.id,
-            ...docItem.data(),
-          })) as MenuItem[];
-          setMenuItems(items);
-        } else {
-          setMenuItems(MENU_ITEMS);
-        }
+       const items = snapshot.docs.map((docItem) => ({
+  id: docItem.id,
+  ...docItem.data(),
+})) as MenuItem[];
+setMenuItems(items);
       },
       (error) => {
         console.error('Menü çekme hatası:', error);
@@ -219,7 +214,7 @@ const App: React.FC = () => {
         <Footer />
       </div>
 
-      <AiAssistant onAddToCart={handleAddToCart} onPlaceOrder={handlePlaceOrder} />
+    
 
       <motion.button
         initial={{ x: -100, opacity: 0 }}
