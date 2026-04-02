@@ -142,22 +142,38 @@ export const CartModal: React.FC<CartModalProps> = ({
   const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const order: Order = {
-      id: `ORD-${Date.now()}`,
-      items: [...cart],
-      customer: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        address: formData.address,
-        paymentMethod: formData.paymentMethod === 'Nakit' ? 'cash' : 'card',
-       orderNote: formData.orderNote || ''
-      },
-      total: finalTotal,
-      timestamp: Date.now(),
-      status: 'pending'
-    };
+  const cleanItems = cart.map(item => {
+  const cleaned: any = {
+    cartItemId: item.cartItemId,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity,
+    image: item.image || '',
+    category: item.category || '',
+    description: item.description || '',
+    isSignature: item.isSignature || false,
+    variants: item.variants || []
+  };
+  if (item.customizations) cleaned.customizations = item.customizations;
+  if (item.selectedVariant) cleaned.selectedVariant = item.selectedVariant;
+  return cleaned;
+});
 
+const order: Order = {
+  id: `ORD-${Date.now()}`,
+  items: cleanItems,
+  customer: {
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    phone: formData.phone,
+    address: formData.address,
+    paymentMethod: formData.paymentMethod === 'Nakit' ? 'cash' : 'card',
+    orderNote: formData.orderNote || ''
+  },
+  total: finalTotal,
+  timestamp: Date.now(),
+  status: 'pending'
+};
     if (loyaltyDiscount > 0 && loyaltyAccount && settings) {
       const pointsToRedeem = Math.floor(loyaltyDiscount / settings.pointValueInTL);
       try {
