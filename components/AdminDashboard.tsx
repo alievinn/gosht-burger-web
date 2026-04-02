@@ -45,7 +45,8 @@ import {
   FranchiseApplication,
   LoyaltyAccount,
   Feedback,
-  Coupon
+  Coupon,
+  Branch
 } from '../types';
 import { MENU_ITEMS } from '../constants';
 import { motion } from 'motion/react';
@@ -56,7 +57,7 @@ interface AdminDashboardProps {
   menuItems?: MenuItem[];
 }
 
-type AdminTab =
+ type AdminTab =
   | 'menu'
   | 'orders'
   | 'accounting'
@@ -65,7 +66,9 @@ type AdminTab =
   | 'franchise'
   | 'loyalty'
   | 'feedbacks'
-  | 'campaigns';
+  | 'campaigns'
+  | 'branches';
+  
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('menu');
@@ -74,7 +77,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [newBranch, setNewBranch] = useState({ name: '', address: '', phone: '', hours: '', isActive: true });
   useEffect(() => {
     const savedAuth = localStorage.getItem('admin_auth') === 'true';
     if (savedAuth) setIsAuthenticated(true);
@@ -233,7 +237,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     const loyaltyQuery = query(collection(db, 'loyaltyAccounts'), orderBy('points', 'desc'));
     const feedbacksQuery = query(collection(db, 'feedbacks'), orderBy('timestamp', 'desc'));
     const couponsQuery = query(collection(db, 'coupons'), orderBy('timestamp', 'desc'));
-
+    const branchesQuery = query(collection(db, 'branches'));
+    const unsubBranches = onSnapshot(branchesQuery, (snapshot) => {
+  setBranches(snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Branch[]);
+});
     const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
       const data = snapshot.docs.map((docItem) => ({
         firebaseId: docItem.id,
@@ -679,6 +686,7 @@ const saveChanges = async (updated: MenuItem[]) => {
               { id: 'campaigns', label: 'Kampanyalar', icon: Ticket },
               { id: 'feedbacks', label: 'Geri Bildirimler', icon: MessageSquare },
               { id: 'settings', label: 'Site Ayarları', icon: Edit2 },
+              { id: 'branches', label: 'Şubeler', icon: Building2 },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -742,6 +750,7 @@ const saveChanges = async (updated: MenuItem[]) => {
               { id: 'campaigns', label: 'Kampanya' },
               { id: 'feedbacks', label: 'Geri Bildirim' },
               { id: 'settings', label: 'Ayarlar' },
+              { id: 'branches', label: 'Şubeler' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -809,6 +818,108 @@ const saveChanges = async (updated: MenuItem[]) => {
                 </div>
               </form>
             </motion.div>
+            {activeTab === 'branches' && (
+  <div className="space-y-10 animate-fade-in">
+    <div className="bg-stone-900 p-8 rounded-3xl border border-white/5 shadow-2xl">
+      <h3 className="text-white text-2xl mb-8 flex items-center gap-3 serif">
+        <Plus size={24} className="text-red-500" /> Yeni Şube Ekle
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">Şube Adı</label>
+          <input
+            placeholder="Örn: Batman Merkez Şubesi"
+            value={newBranch.name}
+            onChange={e => setNewBranch({...newBranch, name: e.target.value})}
+            className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none transition-all"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">Telefon</label>
+          <input
+            placeholder="0xxx xxx xx xx"
+            value={newBranch.phone}
+            onChange={e => setNewBranch({...newBranch, phone: e.target.value})}
+            className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none transition-all"
+          />
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">Adres</label>
+          <input
+            placeholder="Örn: Gap Mah. Cafeler Cd. Batman"
+            value={newBranch.address}
+            onChange={e => setNewBranch({...newBranch, address: e.target.value})}
+            className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none transition-all"
+          />
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">Çalışma Saatleri</label>
+          <input
+            placeholder="Örn: Her gün 10:00 - 23:00"
+            value={newBranch.hours}
+            onChange={e => setNewBranch({...newBranch, hours: e.target.value})}
+            className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none transition-all"
+          />
+        </div>
+      </div>
+      <button
+        onClick={async () => {
+          if (!newBranch.name || !newBranch.address) return alert('Şube adı ve adres zorunludur.');
+          await addDoc(collection(db, 'branches'), {
+            ...newBranch,
+            createdAt: Date.now()
+          });
+          setNewBranch({ name: '', address: '', phone: '', hours: '', isActive: true });
+          alert('Şube eklendi! ✅');
+        }}
+        className="mt-8 bg-red-900 text-white px-10 py-4 rounded-2xl uppercase text-xs tracking-[0.2em] font-bold hover:bg-red-800 transition-all"
+      >
+        Şubeyi Kaydet
+      </button>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {branches.length === 0 ? (
+        <div className="col-span-full bg-stone-900 p-24 rounded-3xl border border-dashed border-white/10 text-center">
+          <p className="text-stone-500 font-light tracking-wide">Henüz şube bulunmuyor.</p>
+        </div>
+      ) : (
+        branches.map(branch => (
+          <div key={branch.id} className="bg-stone-900 border border-white/5 rounded-3xl p-8 hover:border-red-900/20 transition-all">
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-white font-serif text-xl">{branch.name}</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    await updateDoc(doc(db, 'branches', branch.id), { isActive: !branch.isActive });
+                  }}
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${branch.isActive ? 'bg-emerald-900/20 text-emerald-500 border border-emerald-900/30' : 'bg-stone-800 text-stone-500 border border-white/5'}`}
+                >
+                  {branch.isActive ? 'Aktif' : 'Pasif'}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (window.confirm('Bu şubeyi silmek istediğinize emin misiniz?')) {
+                      await deleteDoc(doc(db, 'branches', branch.id));
+                    }
+                  }}
+                  className="p-2 text-stone-600 hover:text-red-500 transition-colors"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+            <div className="space-y-3 text-sm text-stone-400">
+              <p>📍 {branch.address}</p>
+              <p>📞 {branch.phone}</p>
+              <p>🕐 {branch.hours}</p>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+)}
           </div>
         ) : (
           <div className="p-6 md:p-10 max-w-7xl mx-auto">
@@ -817,6 +928,7 @@ const saveChanges = async (updated: MenuItem[]) => {
               <div>
                 <h2 className="text-4xl md:text-5xl text-white font-serif tracking-tight premium-gradient-text">
                   {activeTab === 'menu' && 'Menü Yönetimi'}
+                  {activeTab === 'branches' && 'Şube Yönetimi'}
                   {activeTab === 'orders' && 'Sipariş Takibi'}
                   {activeTab === 'accounting' && 'Finansal Özet'}
                   {activeTab === 'messages' && 'Müşteri Mesajları'}
