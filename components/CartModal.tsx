@@ -1,3 +1,4 @@
+import emailjs from '@emailjs/browser';
 import React, { useState } from 'react';
 import { X, Trash2, Plus, Minus, ArrowLeft, CheckCircle2, ShoppingBag, CreditCard, Wallet, Star, Search, Ticket, AlertCircle } from 'lucide-react';
 import { CartItem, Order, SiteSettings, LoyaltyAccount, Coupon } from '../types';
@@ -205,11 +206,28 @@ const order: Order = {
 
    try {
   const cleanOrder = JSON.parse(JSON.stringify(order));
-  await addDoc(collection(db, 'orders'), cleanOrder);
-      window.dispatchEvent(new Event('orders-updated'));
-    } catch (error) {
-      console.error("Sipariş kaydedilirken hata:", error);
-    }
+await addDoc(collection(db, 'orders'), cleanOrder);
+  window.dispatchEvent(new Event('orders-updated'));
+
+  // Email bildirimi gönder
+  await emailjs.send(
+    'service_ket141h',
+    'template_9ghl56o',
+    {
+      order_id: order.id,
+      customer_name: `${formData.firstName} ${formData.lastName}`,
+      customer_phone: formData.phone,
+      customer_address: formData.address,
+      payment_method: formData.paymentMethod,
+      order_items: cart.map(item => `${item.quantity}x ${item.name} - ${item.price * item.quantity} TL`).join('\n'),
+      total: finalTotal,
+      order_time: new Date().toLocaleString('tr-TR')
+    },
+    '-UbqMOikjN7w5WhPh'
+  );
+} catch (error) {
+  console.error("Sipariş kaydedilirken hata:", error);
+}
 
     onClearCart();
     setStep('success');
