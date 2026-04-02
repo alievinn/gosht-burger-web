@@ -1,3 +1,4 @@
+import { Branches } from './components/Branches';
 import React, { useEffect, useState } from 'react';
 import {
   addDoc,
@@ -24,7 +25,7 @@ import { FeedbackModal } from './components/FeedbackModal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { CartModal } from './components/CartModal';
 import { LoyaltyModal } from './components/LoyaltyModal';
-import { CartItem, MenuItem, SiteSettings } from './types';
+import { Branch, CartItem, MenuItem, SiteSettings } from './types';
 
 const App: React.FC = () => {
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false);
@@ -35,7 +36,7 @@ const App: React.FC = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
-
+  const [branches, setBranches] = useState<Branch[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -46,7 +47,9 @@ const App: React.FC = () => {
     }
   };
 
+
   useEffect(() => {
+    
     if (location.pathname === '/gosht-yonetim-2026') {
       setIsAdminOpen(true);
     } else {
@@ -55,6 +58,14 @@ const App: React.FC = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    const branchesQuery = query(collection(db, 'branches'));
+    const unsubscribeBranches = onSnapshot(branchesQuery, (snapshot) => {
+  const items = snapshot.docs.map((docItem) => ({
+    id: docItem.id,
+    ...docItem.data(),
+  })) as Branch[];
+  setBranches(items);
+});
     const productsQuery = query(collection(db, 'products'));
 
     const unsubscribeMenu = onSnapshot(
@@ -207,6 +218,8 @@ setMenuItems(items);
         <Hero />
         <MenuSection items={menuItems} onAddToCart={handleAddToCart} />
         <About />
+        
+        <Branches branches={branches} />
         <Franchise onOpenFranchise={() => setIsFranchiseOpen(true)} />
       </main>
 
@@ -278,3 +291,7 @@ setMenuItems(items);
 };
 
 export default App;
+
+function setBranches(items: Branch[]) {
+  throw new Error('Function not implemented.');
+}
