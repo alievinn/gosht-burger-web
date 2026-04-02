@@ -64,7 +64,7 @@ export const sendMessageToGemini = async (
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const modelId = 'gemini-2.0-flash';
+    const modelId = 'gemini-1.5-flash-latest';
 
     // Construct content history
     // Gemini requires alternating user/model roles and must start with 'user'
