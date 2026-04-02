@@ -47,8 +47,8 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
       ];
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
-        {
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`,
+  {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
