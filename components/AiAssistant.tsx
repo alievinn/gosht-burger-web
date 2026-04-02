@@ -21,6 +21,13 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  const QUICK_ACTIONS = [
+    '🍔 Menüyü göster',
+    '🔥 Popüler burgerler',
+    '💰 Fiyatlar nedir?',
+    '📍 Neredesiniz?'
+  ];
+
   const handleSend = async (textOverride?: string) => {
     const messageText = textOverride || input;
     if (!messageText.trim() || isLoading) return;
@@ -40,7 +47,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
       ];
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -87,7 +94,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-50 w-[95vw] md:w-[400px] h-[550px] bg-stone-900 border border-stone-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[95vw] md:w-[400px] h-[580px] bg-stone-900 border border-stone-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             <div className="p-4 flex justify-between items-center border-b border-stone-800">
               <div className="flex items-center gap-3">
@@ -132,6 +139,20 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
               )}
               <div ref={messagesEndRef} />
             </div>
+
+            {messages.length < 3 && (
+              <div className="px-4 pb-2 flex flex-wrap gap-2">
+                {QUICK_ACTIONS.map((action, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSend(action)}
+                    className="text-xs bg-stone-800 text-stone-300 px-3 py-1.5 rounded-full border border-stone-700 hover:border-red-800 hover:text-white transition-all"
+                  >
+                    {action}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="p-4 border-t border-stone-800">
               <div className="flex gap-2">
