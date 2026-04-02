@@ -203,8 +203,9 @@ const order: Order = {
       }
     }
 
-    try {
-      await addDoc(collection(db, 'orders'), order);
+   try {
+  const cleanOrder = JSON.parse(JSON.stringify(order));
+  await addDoc(collection(db, 'orders'), cleanOrder);
       window.dispatchEvent(new Event('orders-updated'));
     } catch (error) {
       console.error("Sipariş kaydedilirken hata:", error);
