@@ -1233,6 +1233,28 @@ const saveChanges = async (updated: MenuItem[]) => {
                                       Bekliyor Olarak İşaretle
                                     </button>
                                   )}
+                                  <button 
+  onClick={async (e) => {
+    e.stopPropagation();
+    if (window.confirm('Bu siparişi silmek istediğinize emin misiniz?')) {
+      try {
+        const { getDocs, query, where, deleteDoc } = await import('firebase/firestore');
+        const q = query(collection(db, 'orders'), where('id', '==', order.id));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          await deleteDoc(snapshot.docs[0].ref);
+        }
+        setOrders(prev => prev.filter(o => o.id !== order.id));
+      } catch (error) {
+        console.error('Sipariş silme hatası:', error);
+        alert('Sipariş silinirken hata oluştu.');
+      }
+    }
+  }}
+  className="flex-1 bg-red-950 text-red-500 py-4 rounded-2xl text-[10px] uppercase font-bold tracking-[0.2em] transition-all hover:bg-red-900 hover:text-white border border-red-900/20"
+>
+  Siparişi Sil
+</button>
                                 </div>
                               </div>
                             </div>
