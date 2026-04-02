@@ -210,9 +210,11 @@ await addDoc(collection(db, 'orders'), cleanOrder);
   window.dispatchEvent(new Event('orders-updated'));
 
   // Email bildirimi gönder
+  console.log('EmailJS gönderiliyor...');
   await emailjs.send(
+    
     'service_ket141h',
-    'template_9ghl56o',
+   'template_wdwym4n',
     {
       order_id: order.id,
       customer_name: `${formData.firstName} ${formData.lastName}`,
