@@ -42,31 +42,28 @@ export const Footer: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
 
-    try {
-      await addDoc(collection(db, 'messages'), {
-        ...formState,
-        timestamp: Date.now(),
-        createdAt: serverTimestamp(),
-        isRead: false,
-      });
+  try {
+    await addDoc(collection(db, 'messages'), {
+      ...formState,
+      timestamp: Date.now(),
+      createdAt: serverTimestamp(),
+      isRead: false,
+    });
 
-      setSubmitStatus('success');
-      setFormState({ name: '', email: '', subject: '', message: '' });
-
-      setTimeout(() => {
-        setSubmitStatus('idle');
-      }, 3000);
-    } catch (e) {
-      console.error('Error sending message to Firestore:', e);
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    setSubmitStatus('success');
+    setFormState({ name: '', email: '', subject: '', message: '' });
+    setTimeout(() => setSubmitStatus('idle'), 3000);
+  } catch (e) {
+    console.error('Error sending message:', e);
+    setSubmitStatus('error');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const quickLinks = [
     { label: 'Ana Sayfa', href: '#home' },

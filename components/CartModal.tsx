@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { X, Trash2, Plus, Minus, ArrowLeft, CheckCircle2, ShoppingBag, CreditCard, Wallet, Star, Search, Ticket, AlertCircle } from 'lucide-react';
 import { CartItem, Order, SiteSettings, LoyaltyAccount, Coupon } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, addDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 interface CartModalProps {
@@ -80,12 +79,10 @@ export const CartModal: React.FC<CartModalProps> = ({
 
   const applyPoints = () => {
     if (!loyaltyAccount || !settings) return;
-    
     if (loyaltyAccount.points < settings.minPointsToRedeem) {
       alert(`Minimum ${settings.minPointsToRedeem} puan gereklidir.`);
       return;
     }
-
     const discountAmount = Math.min(total, loyaltyAccount.points * settings.pointValueInTL);
     setLoyaltyDiscount(discountAmount);
     alert(`${discountAmount} TL indirim uygulandı!`);
@@ -161,7 +158,6 @@ export const CartModal: React.FC<CartModalProps> = ({
       status: 'pending'
     };
 
-    // Redeem points if discount was applied
     if (loyaltyDiscount > 0 && loyaltyAccount && settings) {
       const pointsToRedeem = Math.floor(loyaltyDiscount / settings.pointValueInTL);
       try {
@@ -179,7 +175,6 @@ export const CartModal: React.FC<CartModalProps> = ({
       }
     }
 
-    // Redeem coupon if applied
     if (appliedCoupon) {
       try {
         await fetch('/api/coupons/redeem', {
@@ -192,23 +187,13 @@ export const CartModal: React.FC<CartModalProps> = ({
       }
     }
 
-    // Save to server
-    const saveOrder = async () => {
-      try {
-        const response = await fetch('/api/orders');
-        const orders = await response.json();
-        await fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify([order, ...orders])
-        });
-        window.dispatchEvent(new Event('orders-updated'));
-      } catch (error) {
-        console.error("Error saving order:", error);
-      }
-    };
-    
-    saveOrder();
+    try {
+      await addDoc(collection(db, 'orders'), order);
+      window.dispatchEvent(new Event('orders-updated'));
+    } catch (error) {
+      console.error("Sipariş kaydedilirken hata:", error);
+    }
+
     onClearCart();
     setStep('success');
   };
@@ -237,7 +222,6 @@ export const CartModal: React.FC<CartModalProps> = ({
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className="relative bg-stone-900 w-full max-w-md h-full border-l border-white/10 shadow-2xl flex flex-col"
       >
-        {/* Header */}
         <div className="p-8 border-b border-white/5 flex justify-between items-center bg-stone-900/50 backdrop-blur-md sticky top-0 z-20">
           <div className="flex items-center gap-4">
             {step === 'checkout' && (
@@ -259,7 +243,6 @@ export const CartModal: React.FC<CartModalProps> = ({
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
           <AnimatePresence mode="wait">
             {step === 'cart' && (
@@ -486,7 +469,6 @@ export const CartModal: React.FC<CartModalProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* Footer */}
         {cart.length > 0 && step !== 'success' && (
           <div className="p-8 bg-stone-900/50 backdrop-blur-xl border-t border-white/5">
             {step === 'cart' && (

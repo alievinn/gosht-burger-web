@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { X, Building2, Wallet, CheckCircle2, User, Phone, Mail, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -19,31 +21,24 @@ export const FranchiseModal: React.FC<FranchiseModalProps> = ({ isOpen, onClose 
     message: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('/api/franchise', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          id: Date.now().toString(),
-          timestamp: Date.now()
-        })
-      });
-      if (response.ok) {
-        setIsSubmitted(true);
-      } else {
-        alert('Başvuru gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
-      }
-    } catch (error) {
-      console.error("Error submitting franchise application:", error);
-      alert('Bir ağ hatası oluştu.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    await addDoc(collection(db, 'franchise'), {
+      ...formData,
+      id: Date.now().toString(),
+      timestamp: Date.now(),
+      status: 'new'
+    });
+    setIsSubmitted(true);
+  } catch (error) {
+    console.error("Franchise başvuru hatası:", error);
+    alert('Başvuru gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <motion.div 
