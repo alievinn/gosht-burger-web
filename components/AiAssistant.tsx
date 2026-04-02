@@ -31,7 +31,6 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
 
     try {
       const apiKey = 'AIzaSyBvEJshIeUnZgUZRMAcT0dykRcd0hpmziM';
-      
       const contents = [
         ...messages.map(m => ({
           role: m.role === 'user' ? 'user' : 'model',
@@ -41,7 +40,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
       ];
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -104,7 +103,10 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setMessages([{ role: 'model', text: 'Merhaba! Size nasıl yardımcı olabilirim?' }])} className="p-2 text-stone-400 hover:text-red-500 transition-colors">
+                <button
+                  onClick={() => setMessages([{ role: 'model', text: 'Merhaba! Size nasıl yardımcı olabilirim?' }])}
+                  className="p-2 text-stone-400 hover:text-red-500 transition-colors"
+                >
                   <Trash2 size={18} />
                 </button>
                 <button onClick={() => setIsOpen(false)} className="p-2 text-stone-400 hover:text-white transition-colors">
