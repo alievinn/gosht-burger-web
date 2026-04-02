@@ -25,7 +25,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsSubmitting(true);
   try {
-    await addDoc(collection(db, 'franchise'), {
+    await addDoc(collection(db, 'franchiseApplications'), {
       ...formData,
       id: Date.now().toString(),
       timestamp: Date.now(),

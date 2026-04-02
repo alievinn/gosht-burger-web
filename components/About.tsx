@@ -25,7 +25,7 @@ export const About: React.FC = () => {
   }, []);
 
   const features = settings?.aboutFeatures 
-    ? settings.aboutFeatures.split('').filter(f => f.trim() !== '')
+   ? settings.aboutFeatures.split(/\n|–(?=\s*[A-ZÖÜĞİŞÇa-z])/).filter(f => f.trim() !== '')
     : [
         "Daily Fresh Beef – Her gün taze çekilen dana döş",
         "Özel GOSHT Sosları – Trüf, barbekü ve özel acı soslar",

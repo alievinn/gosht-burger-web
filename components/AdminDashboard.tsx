@@ -525,7 +525,16 @@ const saveSettings = async () => {
       reader.readAsDataURL(file);
     }
   };
-
+const saveChanges = async (updated: MenuItem[]) => {
+  setItems(updated);
+  try {
+    for (const item of updated) {
+      await setDoc(doc(db, 'products', item.id), item);
+    }
+  } catch (e) {
+    console.error("Menü kayıt hatası:", e);
+  }
+};
   const handleAddOrUpdate = () => {
     if (!newItem.name || !newItem.price) return alert('Lütfen isim ve fiyat giriniz.');
     
@@ -2035,114 +2044,7 @@ const saveSettings = async () => {
                     </button>
                   </div>
                 </div>
-                 <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
-  <div className="flex items-center gap-4 mb-10">
-    <div className="w-10 h-10 bg-red-900/20 rounded-xl flex items-center justify-center border border-red-900/30">
-      <Building2 size={20} className="text-red-600" />
-    </div>
-    <h4 className="text-white serif text-2xl tracking-tight">Franchise Bölümü Ayarları</h4>
-  </div>
-
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-    <div className="space-y-3">
-      <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">
-        Küçük Başlık
-      </label>
-      <input
-        type="text"
-        value={siteSettings.franchiseLabel || ''}
-        onChange={(e) =>
-          setSiteSettings({ ...siteSettings, franchiseLabel: e.target.value })
-        }
-        className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none transition-all"
-      />
-    </div>
-
-    <div className="space-y-3">
-      <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">
-        Ana Başlık
-      </label>
-      <input
-        type="text"
-        value={siteSettings.franchiseTitle || ''}
-        onChange={(e) =>
-          setSiteSettings({ ...siteSettings, franchiseTitle: e.target.value })
-        }
-        className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none transition-all"
-      />
-    </div>
-
-    <div className="space-y-3 md:col-span-2">
-      <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">
-        Quote
-      </label>
-      <input
-        type="text"
-        value={siteSettings.franchiseQuote || ''}
-        onChange={(e) =>
-          setSiteSettings({ ...siteSettings, franchiseQuote: e.target.value })
-        }
-        className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none transition-all"
-      />
-    </div>
-
-    <div className="space-y-3 md:col-span-2">
-      <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">
-        Açıklama Metni
-      </label>
-      <textarea
-        value={siteSettings.franchiseText || ''}
-        onChange={(e) =>
-          setSiteSettings({ ...siteSettings, franchiseText: e.target.value })
-        }
-        className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none h-32 resize-none transition-all"
-      />
-    </div>
-
-    <div className="space-y-3">
-      <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">
-        “Neden Gosht Burger?” Başlığı
-      </label>
-      <input
-        type="text"
-        value={siteSettings.franchiseWhyTitle || ''}
-        onChange={(e) =>
-          setSiteSettings({ ...siteSettings, franchiseWhyTitle: e.target.value })
-        }
-        className="w-full bg-stone-950 border border-white/5 p-4 text-white rounded-2xl focus:border-red-800 outline-none transition-all"
-      />
-    </div>
-
-    <div className="space-y-3">
-      <label className="text-[10px] uppercase tracking-widest text-stone-500 font-bold ml-1">
-        Franchise Görseli
-      </label>
-      <div className="relative group w-full h-40 bg-stone-950 border border-white/5 rounded-3xl overflow-hidden flex items-center justify-center transition-all hover:border-red-900/30">
-        {siteSettings.franchiseImage ? (
-          <img
-            src={siteSettings.franchiseImage}
-            alt="Franchise Preview"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <Upload className="text-stone-800" size={32} />
-            <span className="text-[10px] text-stone-700 uppercase font-bold tracking-widest">
-              Görsel Seç
-            </span>
-          </div>
-        )}
-
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleSettingsImageUpload(e, 'franchiseImage')}
-          className="absolute inset-0 opacity-0 cursor-pointer"
-        />
-      </div>
-    </div>
-  </div>
-</div>
+                 
                 {/* About & Franchise Settings */}
                 <div className="space-y-12">
                   <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
@@ -2373,8 +2275,4 @@ const saveSettings = async () => {
 
 };
 
-export default AdminDashboard;
-function saveChanges(updated: MenuItem[]) {
-  throw new Error('Function not implemented.');
-}
 
