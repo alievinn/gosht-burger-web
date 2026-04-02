@@ -57,7 +57,7 @@ export const sendMessageToGemini = async (
   onPlaceOrder?: (customerInfo: any) => Promise<{ success: boolean; orderId?: string; error?: string }>
 ): Promise<string> => {
   try {
-    const apiKey = process.env.GEMINI_API_KEY || '';
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
     if (!apiKey) {
       console.error("Gemini API Key is missing");
       return "Sistem yapılandırması tamamlanmadı (API Anahtarı eksik). Lütfen yönetici ile iletişime geçin.";
