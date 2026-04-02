@@ -184,11 +184,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
           ...docItem.data()
         })) as MenuItem[];
 
-        if (menuData.length > 0) {
-          setItems(menuData);
-        } else {
-          setItems(MENU_ITEMS);
-        }
+        setItems(menuData);
 
         try {
           const logoRes = await fetch('/api/logo');
@@ -233,7 +229,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
     const ordersQuery = query(collection(db, 'orders'), orderBy('timestamp', 'desc'));
     const messagesQuery = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
-    const franchiseQuery = query(collection(db, 'franchiseApplications'), orderBy('timestamp', 'desc'));
+    const franchiseQuery = query(collection(db, 'franchise'), orderBy('timestamp', 'desc'));
     const loyaltyQuery = query(collection(db, 'loyaltyAccounts'), orderBy('points', 'desc'));
     const feedbacksQuery = query(collection(db, 'feedbacks'), orderBy('timestamp', 'desc'));
     const couponsQuery = query(collection(db, 'coupons'), orderBy('timestamp', 'desc'));
