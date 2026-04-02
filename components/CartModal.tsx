@@ -151,7 +151,7 @@ export const CartModal: React.FC<CartModalProps> = ({
         phone: formData.phone,
         address: formData.address,
         paymentMethod: formData.paymentMethod === 'Nakit' ? 'cash' : 'card',
-        orderNote: formData.orderNote
+       orderNote: formData.orderNote || ''
       },
       total: finalTotal,
       timestamp: Date.now(),
