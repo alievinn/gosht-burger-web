@@ -30,7 +30,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = 'AIzaSyBvEJshIeUnZgUZRMAcT0dykRcd0hpmziM';
+      const apiKey = 'AIzaSyAZ3UeBA0eNSBVjaPfE8FznoA0tczJX-Q0';
       const contents = [
         ...messages.map(m => ({
           role: m.role === 'user' ? 'user' : 'model',
