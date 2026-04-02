@@ -236,9 +236,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
     const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
       const data = snapshot.docs.map((docItem) => ({
+        firebaseId: docItem.id,
         id: docItem.id,
         ...docItem.data()
-      })) as Order[];
+      })) as unknown as Order[];
 
       if (lastOrderCount > 0 && data.length > lastOrderCount) {
         playNotificationSound();
@@ -590,16 +591,28 @@ const saveChanges = async (updated: MenuItem[]) => {
   };
 
   const updateOrderStatus = async (orderId: string, status: 'pending' | 'completed' | 'cancelled') => {
-    try {
-      await updateDoc(doc(db, 'orders', orderId), { status });
-      setOrders((prev) =>
-        prev.map((order) => (order.id === orderId ? { ...order, status } : order))
-      );
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      alert('Sipariş durumu güncellenirken hata oluştu.');
+  try {
+    // Firebase'de id alanına göre bul
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    // Firebase document ID'si farklı olabilir, query ile bul
+    const { getDocs, query, where } = await import('firebase/firestore');
+    const q = query(collection(db, 'orders'), where('id', '==', orderId));
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+      await updateDoc(snapshot.docs[0].ref, { status });
     }
-  };
+    
+    setOrders((prev) =>
+      prev.map((order) => (order.id === orderId ? { ...order, status } : order))
+    );
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    alert('Sipariş durumu güncellenirken hata oluştu.');
+  }
+};
 
   const filteredOrders = orders
     .filter(order => {
