@@ -1771,7 +1771,6 @@ const saveChanges = async (updated: MenuItem[]) => {
                         timestamp: Date.now()
                       };
                       await addDoc(collection(db, 'coupons'), coupon);
-                      setCoupons((prev) => [...prev, coupon]);
                       setNewCoupon({
                         code: '',
                         discountType: 'percentage',
@@ -1844,10 +1843,16 @@ const saveChanges = async (updated: MenuItem[]) => {
                             )}
                             <div className="flex justify-between items-center text-sm">
                               <span className="text-stone-500">Durum</span>
-                              <span className={`flex items-center gap-2 font-bold ${coupon.isActive ? 'text-emerald-500' : 'text-red-500'}`}>
+                              <button
+                                onClick={async () => {
+                                  await updateDoc(doc(db, 'coupons', coupon.id), { isActive: !coupon.isActive });
+                                }}
+                                title={coupon.isActive ? 'Pasif yapmak için tıkla' : 'Aktif yapmak için tıkla'}
+                                className={`flex items-center gap-2 font-bold px-3 py-1.5 rounded-lg border transition-all ${coupon.isActive ? 'text-emerald-500 border-emerald-900/40 bg-emerald-900/10 hover:bg-emerald-900/20' : 'text-red-500 border-red-900/40 bg-red-900/10 hover:bg-red-900/20'}`}
+                              >
                                 <div className={`w-1.5 h-1.5 rounded-full ${coupon.isActive ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
                                 {coupon.isActive ? 'Aktif' : 'Pasif'}
-                              </span>
+                              </button>
                             </div>
                           </div>
                         </div>

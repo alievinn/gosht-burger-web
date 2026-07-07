@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { X, Trash2, Plus, Minus, ArrowLeft, CheckCircle2, ShoppingBag, CreditCard, Wallet, Star, Search, Ticket, AlertCircle } from 'lucide-react';
 import { CartItem, Order, SiteSettings, LoyaltyAccount, Coupon } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { doc, onSnapshot, collection, addDoc } from 'firebase/firestore';
+import { doc, onSnapshot, collection, addDoc, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 interface CartModalProps {
@@ -94,8 +94,11 @@ export const CartModal: React.FC<CartModalProps> = ({
     setIsCheckingCoupon(true);
     setCouponError('');
     try {
-      const res = await fetch('/api/coupons');
-      const coupons: Coupon[] = await res.json();
+      const snapshot = await getDocs(collection(db, 'coupons'));
+      const coupons: Coupon[] = snapshot.docs.map(d => ({
+        ...(d.data() as Coupon),
+        id: d.id
+      }));
       const coupon = coupons.find(c => c.code.toUpperCase() === couponCode.toUpperCase() && c.isActive);
       
       const now = new Date();
@@ -194,10 +197,8 @@ const order: Order = {
 
     if (appliedCoupon) {
       try {
-        await fetch('/api/coupons/redeem', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: appliedCoupon.code })
+        await updateDoc(doc(db, 'coupons', appliedCoupon.id), {
+          usageCount: increment(1)
         });
       } catch (e) {
         console.error("Error redeeming coupon during order:", e);
