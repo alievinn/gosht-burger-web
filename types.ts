@@ -97,6 +97,14 @@ export interface SiteSettings {
   pointsPerTL: number;
   minPointsToRedeem: number;
   pointValueInTL: number;
+  // Live Animation Settings
+  marqueeEnabled?: boolean;
+  marqueeText?: string;
+  effectEnabled?: boolean;
+  effectEmojis?: string;
+  effectDensity?: number;
+  // Order Settings
+  minOrderTotal?: number;
 }
 
 export interface ContactMessage {
