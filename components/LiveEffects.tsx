@@ -59,9 +59,9 @@ export const LiveEffects: React.FC<LiveEffectsProps> = ({ settings }) => {
       )}
 
       {marqueeEnabled && (
-        <div className="fixed bottom-0 left-0 w-full z-30 bg-red-900/95 backdrop-blur-md border-t border-white/10 overflow-hidden shadow-2xl">
+        <div className="fixed top-0 left-0 w-full z-[35] h-8 bg-red-900/95 backdrop-blur-md border-b border-white/10 overflow-hidden shadow-2xl">
           <motion.div
-            className="flex whitespace-nowrap py-2"
+            className="flex items-center whitespace-nowrap h-8"
             animate={{ x: ['0%', '-50%'] }}
             transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
           >

@@ -38,6 +38,22 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
     };
   }, []);
 
+  useEffect(() => {
+    const unsubLogo = onSnapshot(doc(db, 'settings', 'logo'), (snapshot) => {
+      const logo = snapshot.exists() ? (snapshot.data() as { logo?: string }).logo : null;
+      if (logo) {
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = logo;
+      }
+    }, (e) => console.error('Error fetching favicon logo:', e));
+    return () => unsubLogo();
+  }, []);
+
   const navLinks = [
     { name: 'Ana Sayfa', href: '#home' },
     { name: 'GOSHT MENÜ', href: '#menu' },
@@ -54,10 +70,12 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
     { Icon: MessageCircle, href: settings?.whatsappNumber ? `https://wa.me/${settings.whatsappNumber}` : "https://wa.me/905078641672", label: "WhatsApp", color: "text-[#25D366]" },
   ];
 
+  const marqueeOn = !!settings?.marqueeEnabled && !!(settings?.marqueeText || '').trim();
+
   return (
     <>
     <LiveEffects settings={settings} />
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
+    <nav className={`fixed ${marqueeOn ? 'top-8' : 'top-0'} left-0 w-full z-50 transition-all duration-500 ${
       isScrolled ? 'py-4 bg-brand-red/90 backdrop-blur-xl border-b border-white/5 shadow-2xl' : 'py-8 bg-transparent'
     }`}>
       <div className="container mx-auto px-6 flex justify-between items-center">

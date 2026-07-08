@@ -2358,7 +2358,7 @@ const saveChanges = async (updated: MenuItem[]) => {
                       <div className="flex items-center justify-between p-6 bg-stone-950 border border-white/5 rounded-2xl shadow-inner">
                         <div>
                           <p className="text-white font-bold text-sm tracking-tight">Kayan Duyuru Bandı</p>
-                          <p className="text-stone-500 text-xs font-light mt-1">Sitenin altında sürekli kayan kampanya yazısı gösterir.</p>
+                          <p className="text-stone-500 text-xs font-light mt-1">Sitenin en üstünde sürekli kayan kampanya yazısı gösterir.</p>
                         </div>
                         <button 
                           onClick={() => setSiteSettings({...siteSettings, marqueeEnabled: !siteSettings.marqueeEnabled})}
