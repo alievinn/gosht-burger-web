@@ -50,6 +50,8 @@ export const CartModal: React.FC<CartModalProps> = ({
   }, 0);
 
   const finalTotal = Math.max(0, total - loyaltyDiscount - couponDiscount);
+  const minOrder = Number(settings?.minOrderTotal) || 0;
+  const belowMinOrder = minOrder > 0 && total < minOrder;
 
   React.useEffect(() => {
     const settingsRef = doc(db, 'settings', 'siteConfig');
@@ -564,12 +566,21 @@ await addDoc(collection(db, 'orders'), cleanOrder);
               </div>
             </div>
             {step === 'cart' ? (
-              <button 
-                onClick={() => setStep('checkout')}
-                className="w-full bg-red-900 text-white py-5 uppercase tracking-[0.3em] text-xs font-bold hover:bg-red-800 transition-all duration-500 shadow-2xl shadow-red-950/50"
-              >
-                Ödemeye Geç
-              </button>
+              <div className="space-y-3">
+                {belowMinOrder && (
+                  <div className="flex items-center justify-center gap-2 text-amber-500 text-[10px] font-medium">
+                    <AlertCircle size={12} />
+                    <span>Minimum sipariş tutarı {minOrder} TL — {minOrder - total} TL daha ekleyin</span>
+                  </div>
+                )}
+                <button 
+                  onClick={() => setStep('checkout')}
+                  disabled={belowMinOrder}
+                  className="w-full bg-red-900 text-white py-5 uppercase tracking-[0.3em] text-xs font-bold hover:bg-red-800 transition-all duration-500 shadow-2xl shadow-red-950/50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-900"
+                >
+                  Ödemeye Geç
+                </button>
+              </div>
             ) : (
               <button 
                 form="checkout-form"

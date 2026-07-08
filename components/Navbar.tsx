@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Instagram, Music, MessageCircle, ShoppingBag, Star } from 'lucide-react';
 import { Logo } from './Logo';
+import { LiveEffects } from './LiveEffects';
 import { SiteSettings } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -54,6 +55,8 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
   ];
 
   return (
+    <>
+    <LiveEffects settings={settings} />
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
       isScrolled ? 'py-4 bg-brand-red/90 backdrop-blur-xl border-b border-white/5 shadow-2xl' : 'py-8 bg-transparent'
     }`}>
@@ -246,5 +249,6 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
         )}
       </AnimatePresence>
     </nav>
+    </>
   );
 };

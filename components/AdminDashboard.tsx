@@ -34,7 +34,8 @@ import {
   Phone,
   Star,
   TrendingUp,
-  Ticket
+  Ticket,
+  Sparkles
 } from 'lucide-react';
 import {
   MenuItem,
@@ -137,7 +138,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     loyaltyEnabled: true,
     pointsPerTL: 1,
     minPointsToRedeem: 500,
-    pointValueInTL: 0.1
+    pointValueInTL: 0.1,
+    marqueeEnabled: false,
+    marqueeText: '🔥 GOSHT10 koduyla sepette %10 indirim! 🔥',
+    effectEnabled: false,
+    effectEmojis: '🍔 🍟 🔥',
+    effectDensity: 10,
+    minOrderTotal: 0
   });
 
   const addVariant = () => {
@@ -2334,6 +2341,100 @@ const saveChanges = async (updated: MenuItem[]) => {
                           </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Animation & Order Settings */}
+                <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="w-10 h-10 bg-red-900/20 rounded-xl flex items-center justify-center border border-red-900/30">
+                      <Sparkles size={20} className="text-red-600" />
+                    </div>
+                    <h4 className="text-white serif text-2xl tracking-tight">Canlılık & Animasyon</h4>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="space-y-8">
+                      <div className="flex items-center justify-between p-6 bg-stone-950 border border-white/5 rounded-2xl shadow-inner">
+                        <div>
+                          <p className="text-white font-bold text-sm tracking-tight">Kayan Duyuru Bandı</p>
+                          <p className="text-stone-500 text-xs font-light mt-1">Sitenin altında sürekli kayan kampanya yazısı gösterir.</p>
+                        </div>
+                        <button 
+                          onClick={() => setSiteSettings({...siteSettings, marqueeEnabled: !siteSettings.marqueeEnabled})}
+                          className={`w-14 h-7 rounded-full transition-all relative shadow-lg ${siteSettings.marqueeEnabled ? 'bg-red-900' : 'bg-stone-800'}`}
+                        >
+                          <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-md ${siteSettings.marqueeEnabled ? 'left-8' : 'left-1'}`}></div>
+                        </button>
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-stone-500 uppercase tracking-[0.2em] font-bold block mb-3 ml-1">Duyuru Metni</label>
+                        <input 
+                          type="text"
+                          value={siteSettings.marqueeText || ''}
+                          onChange={(e) => setSiteSettings({...siteSettings, marqueeText: e.target.value})}
+                          placeholder="🔥 GOSHT10 koduyla %10 indirim! 🔥"
+                          className="w-full bg-stone-950 border border-white/5 text-white p-4 rounded-2xl focus:border-red-900/50 outline-none transition-all font-light"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-8">
+                      <div className="flex items-center justify-between p-6 bg-stone-950 border border-white/5 rounded-2xl shadow-inner">
+                        <div>
+                          <p className="text-white font-bold text-sm tracking-tight">Uçuşan Emoji Efekti</p>
+                          <p className="text-stone-500 text-xs font-light mt-1">Sitede hafifçe süzülen emojilerle canlılık katar.</p>
+                        </div>
+                        <button 
+                          onClick={() => setSiteSettings({...siteSettings, effectEnabled: !siteSettings.effectEnabled})}
+                          className={`w-14 h-7 rounded-full transition-all relative shadow-lg ${siteSettings.effectEnabled ? 'bg-red-900' : 'bg-stone-800'}`}
+                        >
+                          <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-md ${siteSettings.effectEnabled ? 'left-8' : 'left-1'}`}></div>
+                        </button>
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-stone-500 uppercase tracking-[0.2em] font-bold block mb-3 ml-1">Emojiler (boşlukla ayırın)</label>
+                        <input 
+                          type="text"
+                          value={siteSettings.effectEmojis || ''}
+                          onChange={(e) => setSiteSettings({...siteSettings, effectEmojis: e.target.value})}
+                          placeholder="🍔 🍟 🔥"
+                          className="w-full bg-stone-950 border border-white/5 text-white p-4 rounded-2xl focus:border-red-900/50 outline-none transition-all font-light"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-stone-500 uppercase tracking-[0.2em] font-bold block mb-3 ml-1">Yoğunluk (4-30 arası emoji sayısı)</label>
+                        <input 
+                          type="number"
+                          min={4}
+                          max={30}
+                          value={siteSettings.effectDensity || 10}
+                          onChange={(e) => setSiteSettings({...siteSettings, effectDensity: Number(e.target.value)})}
+                          className="w-full bg-stone-950 border border-white/5 text-white p-4 rounded-2xl focus:border-red-900/50 outline-none transition-all font-light"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Settings */}
+                <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="w-10 h-10 bg-red-900/20 rounded-xl flex items-center justify-center border border-red-900/30">
+                      <ShoppingBag size={20} className="text-red-600" />
+                    </div>
+                    <h4 className="text-white serif text-2xl tracking-tight">Sipariş Ayarları</h4>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div>
+                      <label className="text-[10px] text-stone-500 uppercase tracking-[0.2em] font-bold block mb-3 ml-1">Minimum Sipariş Tutarı (TL)</label>
+                      <input 
+                        type="number"
+                        min={0}
+                        value={siteSettings.minOrderTotal || 0}
+                        onChange={(e) => setSiteSettings({...siteSettings, minOrderTotal: Number(e.target.value)})}
+                        className="w-full bg-stone-950 border border-white/5 text-white p-4 rounded-2xl focus:border-red-900/50 outline-none transition-all font-light"
+                      />
+                      <p className="text-stone-500 text-xs font-light mt-3 ml-1">Bu tutarın altındaki sepetlerde sipariş verilemez. 0 yazarsanız sınır uygulanmaz.</p>
                     </div>
                   </div>
                 </div>
