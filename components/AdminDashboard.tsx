@@ -183,6 +183,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     audio.play().catch(e => console.log("Audio play blocked by browser:", e));
   };
 
+  // Request browser notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  const showBrowserNotification = (order: Order) => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const items = (order.items || []).map((i: { name: string; quantity: number }) => `${i.quantity}x ${i.name}`).join(', ');
+    new Notification('\uD83C\uDF54 Yeni Sipari\u015f!', {
+      body: `${order.customer_name || 'M\u00fc\u015fteri'} \u2014 ${items}\n\uD83D\uDCB0 ${order.total || order.finalTotal || '?'} TL`,
+      icon: '/favicon.ico',
+      tag: order.id,
+      requireInteraction: true
+    });
+  };
+
   // Load data on mount
   useEffect(() => {
     if (!isOpen) return;
@@ -257,6 +275,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
       if (lastOrderCount > 0 && data.length > lastOrderCount) {
         playNotificationSound();
+        const newOrders = data.slice(0, data.length - lastOrderCount);
+        newOrders.forEach(o => showBrowserNotification(o));
       }
 
       setOrders(data);
