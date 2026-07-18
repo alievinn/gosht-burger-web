@@ -230,6 +230,16 @@ await addDoc(collection(db, 'orders'), cleanOrder);
     },
     '-UbqMOikjN7w5WhPh'
   );
+  // Telegram bildirimi
+  try {
+    await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order })
+    });
+  } catch (notifyError) {
+    console.error('Bildirim hatası:', notifyError);
+  }
 } catch (error) {
   console.error("Sipariş kaydedilirken hata:", error);
 }
