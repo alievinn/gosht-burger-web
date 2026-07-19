@@ -16,6 +16,7 @@ import { db } from './services/firebase';
 import { MENU_ITEMS } from './constants';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { AIChat } from './components/AIChat';
 import { MenuSection } from './components/MenuSection';
 import { About } from './components/About';
 import { Franchise } from './components/Franchise';
@@ -222,6 +223,7 @@ setMenuItems(items);
         <Branches branches={branches} />
         <Franchise onOpenFranchise={() => setIsFranchiseOpen(true)} />
       </main>
+      <AIChat />
 
       <div id="contact" className="scroll-mt-28">
         <Footer />
