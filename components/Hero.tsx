@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { HeroParallax } from './HeroParallax';
 import { ChevronDown, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SiteSettings } from '../types';
@@ -30,6 +31,7 @@ export const Hero: React.FC = () => {
 
   return (
     <section id="home" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+      <HeroParallax />
       <motion.div 
         initial={{ scale: 1.1 }}
         animate={{ scale: [1.1, 1.05, 1.1] }}
