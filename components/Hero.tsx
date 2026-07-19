@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HeroParallax } from './HeroParallax';
+import { HeroSlider } from './HeroSlider';
 import { ChevronDown, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SiteSettings } from '../types';
@@ -31,22 +31,7 @@ export const Hero: React.FC = () => {
 
   return (
     <section id="home" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      <HeroParallax />
-      <motion.div 
-        initial={{ scale: 1.1 }}
-        animate={{ scale: [1.1, 1.05, 1.1] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute inset-0 z-0"
-      >
-        <img 
-          src={heroBg || "https://images.unsplash.com/photo-1547584370-2cc98b8b8dc8?q=80&w=2071&auto=format&fit=crop"} 
-          alt="Gosht Burger Batman Premium Gurme Burger ve Steak Deneyimi" 
-          className="w-full h-full object-cover opacity-60"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/90 via-stone-950/40 to-stone-950"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
-      </motion.div>
+      <HeroSlider />
 
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
         <div className="flex flex-col items-center">
@@ -75,7 +60,7 @@ export const Hero: React.FC = () => {
               <>
                 <span className="block premium-gradient-text">Ateşin</span>
                 <span className="block italic gold-gradient-text ml-4 md:ml-12">Sanata</span>
-                <span className="block premium-gradient-text">Dönüşümü</span>
+                <span className="block premium-gradient-text">Dönüşünü</span>
               </>
             )}
           </motion.h1>
