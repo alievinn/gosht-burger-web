@@ -24,12 +24,12 @@ export const AIChat: React.FC = () => {
     setMsgs(next);
     setLoading(true);
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, system: SYS, messages: next.map(m => ({ role: m.role, content: m.content })) })
+        body: JSON.stringify({ messages: next.map(m => ({ role: m.role, content: m.content })) })
       });
       const d = await res.json();
-      const reply = d.content?.[0]?.text || 'Su an yanit veremiyorum.';
+      const reply = d.reply || 'Su an yanit veremiyorum.';
       setMsgs(p => [...p, { role: 'assistant', content: reply }]);
       addDoc(collection(db, 'ai_chats'), { messages: [...next, { role: 'assistant', content: reply }], createdAt: new Date().toISOString() }).catch(() => {});
     } catch { setMsgs(p => [...p, { role: 'assistant', content: 'Baglanti hatasi.' }]); }
