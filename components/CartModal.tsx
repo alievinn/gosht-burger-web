@@ -145,8 +145,11 @@ export const CartModal: React.FC<CartModalProps> = ({
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     
   const cleanItems = cart.map(item => {
   const cleaned: any = {
@@ -244,6 +247,7 @@ await addDoc(collection(db, 'orders'), cleanOrder);
   console.error("Sipariş kaydedilirken hata:", error);
 }
 
+    setIsSubmitting(false);
     onClearCart();
     setStep('success');
   };
