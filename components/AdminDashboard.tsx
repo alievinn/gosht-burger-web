@@ -110,6 +110,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [newVariant, setNewVariant] = useState({ label: '', price: 0 });
   const [siteLogo, setSiteLogo] = useState<string | null>(null);
   const [heroBg, setHeroBg] = useState<string | null>(null);
+  const [heroSlides, setHeroSlides] = useState<{id: string; url: string; order: number}[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     aboutText: '',
     aboutLabel: 'Mirasımız',
@@ -311,6 +312,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
       })) as Feedback[]);
     });
 
+    const slidesQ = query(collection(db, 'heroSlides'), orderBy('order','asc'));
+    const unsubSlides = onSnapshot(slidesQ, snap => { setHeroSlides(snap.docs.map(d=>({id:d.id,...d.data()})) as {id:string;url:string;order:number}[]); });
     const unsubCoupons = onSnapshot(couponsQuery, (snapshot) => {
       setCoupons(snapshot.docs.map((docItem) => ({
         id: docItem.id,
@@ -319,6 +322,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     });
 
     return () => {
+      unsubSlides();
       unsubOrders();
       unsubMessages();
       unsubFranchise();
@@ -2066,6 +2070,32 @@ const saveChanges = async (updated: MenuItem[]) => {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
+                  <div className="flex items-center gap-4 mb-10"><div className="w-10 h-10 bg-red-900/20 rounded-xl flex items-center justify-center border border-red-900/30"><Upload size={20} className="text-red-600" /></div><h4 className="text-white serif text-2xl tracking-tight">Slider Görselleri</h4></div>
+                  <p className="text-stone-400 text-sm font-light mb-8">Ana sayfada gösterilecek slider görsellerini buradan yönetin. Sağ-sol ok ile geçiş, 5 saniyede otomatik ilerleme.</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                    {heroSlides.map((slide,i)=>(
+                      <div key={slide.id} className="relative group aspect-video bg-stone-950 rounded-2xl overflow-hidden border border-white/5">
+                        <img src={slide.url} alt={"Slide "+(i+1)} className="w-full h-full object-cover"/>
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button onClick={async()=>{await deleteDoc(doc(db,'heroSlides',slide.id));}} className="w-9 h-9 bg-red-900 rounded-xl flex items-center justify-center text-white"><Trash2 size={16}/></button>
+                        </div>
+                        <div className="absolute top-2 left-2 w-6 h-6 bg-black/60 rounded-lg flex items-center justify-center text-white text-xs font-bold">{i+1}</div>
+                      </div>
+                    ))}
+                    {heroSlides.length<8&&(
+                      <div className="relative aspect-video bg-stone-950 rounded-2xl border border-dashed border-white/10 flex items-center justify-center hover:border-red-900/50 transition-colors">
+                        <div className="text-center pointer-events-none"><Plus size={24} className="text-stone-600 mx-auto mb-1"/><p className="text-stone-600 text-xs">Görsel Ekle</p></div>
+                        <input type="file" accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={async(e)=>{
+                          for(const file of Array.from(e.target.files||[])){const reader=new FileReader();reader.onloadend=async()=>{await addDoc(collection(db,'heroSlides'),{url:reader.result,order:heroSlides.length+Math.random()});};reader.readAsDataURL(file);}
+                          e.target.value='';
+                        }}/>
+                      </div>
+                    )}
+                  </div>
+                  {heroSlides.length===0&&<p className="text-stone-600 text-xs text-center mt-2">Görsel eklenmediğinde varsayılan görseller kullanılır.</p>}
                 </div>
 
                 <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
