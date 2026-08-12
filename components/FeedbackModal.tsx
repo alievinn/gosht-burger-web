@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
 import { X, Star, Send, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { Feedback } from '../types';
 
 interface FeedbackModalProps {
@@ -17,40 +18,37 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim() || !comment.trim()) {
+      setError('Lütfen adınızı ve yorumunuzu girin.');
+      return;
+    }
     setIsSubmitting(true);
+    setError('');
 
     const feedback: Feedback = {
       id: Date.now().toString(),
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim(),
       rating,
-      comment,
+      comment: comment.trim(),
       timestamp: Date.now()
     };
 
     try {
-      const res = await fetch('/api/feedbacks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(feedback)
-      });
-
-      if (res.ok) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          onClose();
-          setIsSuccess(false);
-          setName('');
-          setEmail('');
-          setComment('');
-          setRating(5);
-        }, 3000);
-      }
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
+      await addDoc(collection(db, 'feedbacks'), feedback);
+      setIsSuccess(true);
+      setTimeout(() => {
+        onClose();
+        setIsSuccess(false);
+        setName(''); setEmail(''); setComment(''); setRating(5); setError('');
+      }, 2500);
+    } catch (err) {
+      console.error('Feedback error:', err);
+      setError('Gönderilirken hata oluştu, tekrar deneyin.');
     } finally {
       setIsSubmitting(false);
     }
