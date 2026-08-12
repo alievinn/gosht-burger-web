@@ -168,7 +168,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
   // Orders State
   const [orders, setOrders] = useState<Order[]>([]);
-  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'last7' | 'last30'>('all');
+  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'last7' | 'last30' | 'custom'>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'cash' | 'card'>('all');
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
@@ -316,6 +318,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     const slidesQ = query(collection(db, 'heroSlides'), orderBy('order','asc'));
     const unsubSlides = onSnapshot(slidesQ, snap => { setHeroSlides(snap.docs.map(d=>({id:d.id,...d.data()})) as {id:string;url:string;order:number}[]); });
     onSnapshot(doc(db,'settings','pwaIcon'), snap => { if(snap.exists()) setPwaIcon(snap.data().url || null); });
+    onSnapshot(doc(db, 'settings', 'logo'), snap => { if(snap.exists()) setSiteLogo(snap.data().logo || null); });
+    onSnapshot(doc(db, 'settings', 'siteConfig'), snap => { if(snap.exists()) setSiteSettings(prev => ({...prev, ...snap.data()})); });
     const unsubCoupons = onSnapshot(couponsQuery, (snapshot) => {
       setCoupons(snapshot.docs.map((docItem) => ({
         id: docItem.id,
@@ -664,6 +668,10 @@ const saveChanges = async (updated: MenuItem[]) => {
         if (timeFilter === 'today' && now - orderTime >= oneDay) return false;
         if (timeFilter === 'last7' && now - orderTime >= oneDay * 7) return false;
         if (timeFilter === 'last30' && now - orderTime >= oneDay * 30) return false;
+        if (timeFilter === 'custom') {
+          if (dateFrom && orderTime < new Date(dateFrom).getTime()) return false;
+          if (dateTo && orderTime > new Date(dateTo + 'T23:59:59').getTime()) return false;
+        }
       }
 
       // Payment Filter
@@ -1110,10 +1118,23 @@ const saveChanges = async (updated: MenuItem[]) => {
                         {newItem.variants && newItem.variants.length > 0 && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {newItem.variants.map((v) => (
-                              <div key={v.id} className="flex justify-between items-center bg-stone-950 p-4 border border-white/5 rounded-2xl group">
-                                <span className="text-white text-sm font-medium">{v.label} — <span className="text-red-500 font-bold">{v.price} TL</span></span>
-                                <button onClick={() => removeVariant(v.id)} className="text-stone-700 hover:text-red-600 transition-colors">
-                                  <Trash2 size={18} />
+                              <div key={v.id} className="flex items-center gap-2 bg-stone-950 p-3 border border-white/5 rounded-2xl group">
+                                <span className="text-white text-sm font-medium flex-1">{v.label}</span>
+                                <input
+                                  type="number"
+                                  defaultValue={v.price}
+                                  onBlur={(e) => {
+                                    const newPrice = Number(e.target.value);
+                                    setNewItem(prev => ({
+                                      ...prev,
+                                      variants: (prev.variants||[]).map(x => x.id===v.id ? {...x, price: newPrice} : x)
+                                    }));
+                                  }}
+                                  className="w-20 bg-stone-900 border border-white/10 text-red-400 font-bold text-sm px-2 py-1 rounded-lg outline-none focus:border-red-900/50 text-center"
+                                />
+                                <span className="text-stone-500 text-xs">TL</span>
+                                <button onClick={() => removeVariant(v.id)} className="text-stone-700 hover:text-red-600 transition-colors ml-1">
+                                  <Trash2 size={16} />
                                 </button>
                               </div>
                             ))}
@@ -1200,6 +1221,16 @@ const saveChanges = async (updated: MenuItem[]) => {
                       <button onClick={() => setTimeFilter('all')} className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-xl transition-all ${timeFilter === 'all' ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' : 'text-stone-500 hover:text-white'}`}>Hepsi</button>
                       <button onClick={() => setTimeFilter('today')} className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-xl transition-all ${timeFilter === 'today' ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' : 'text-stone-500 hover:text-white'}`}>Bugün</button>
                       <button onClick={() => setTimeFilter('last7')} className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-xl transition-all ${timeFilter === 'last7' ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' : 'text-stone-500 hover:text-white'}`}>7 Gün</button>
+                      <button onClick={() => setTimeFilter('custom')} className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-xl transition-all ${timeFilter === 'custom' ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' : 'text-stone-500 hover:text-white'}`}>Özel</button>
+                      {timeFilter === 'custom' && (
+                        <div className="flex items-center gap-2 ml-2">
+                          <input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}
+                            className="bg-stone-950 border border-white/10 text-white text-[10px] px-2 py-1 rounded-lg outline-none focus:border-red-900/50" />
+                          <span className="text-stone-500 text-xs">—</span>
+                          <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}
+                            className="bg-stone-950 border border-white/10 text-white text-[10px] px-2 py-1 rounded-lg outline-none focus:border-red-900/50" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Payment Filter */}
@@ -2571,6 +2602,50 @@ const saveChanges = async (updated: MenuItem[]) => {
                           className="w-full bg-stone-950 border border-white/5 text-white p-4 rounded-2xl focus:border-red-900/50 outline-none transition-all font-light"
                         />
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Credentials Change */}
+                <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="w-10 h-10 bg-red-900/20 rounded-xl flex items-center justify-center border border-red-900/30"><Lock size={20} className="text-red-600" /></div>
+                    <h4 className="text-white serif text-2xl tracking-tight">Kullanıcı Adı & Şifre</h4>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                      <label className="text-[10px] text-stone-500 uppercase tracking-[0.2em] font-bold block mb-3 ml-1">Yeni Kullanıcı Adı</label>
+                      <input id="new-username" type="text" placeholder="Yeni kullanıcı adı"
+                        className="w-full bg-stone-950 border border-white/5 text-white p-4 rounded-2xl focus:border-red-900/50 outline-none transition-all font-light" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-stone-500 uppercase tracking-[0.2em] font-bold block mb-3 ml-1">Yeni Şifre</label>
+                      <input id="new-password" type="password" placeholder="Yeni şifre"
+                        className="w-full bg-stone-950 border border-white/5 text-white p-4 rounded-2xl focus:border-red-900/50 outline-none transition-all font-light" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-stone-500 uppercase tracking-[0.2em] font-bold block mb-3 ml-1">Şifreyi Onayla</label>
+                      <input id="confirm-password" type="password" placeholder="Şifreyi tekrar girin"
+                        className="w-full bg-stone-950 border border-white/5 text-white p-4 rounded-2xl focus:border-red-900/50 outline-none transition-all font-light" />
+                    </div>
+                    <div className="flex items-end">
+                      <button onClick={async () => {
+                        const u = (document.getElementById('new-username') as HTMLInputElement).value.trim();
+                        const p = (document.getElementById('new-password') as HTMLInputElement).value;
+                        const c = (document.getElementById('confirm-password') as HTMLInputElement).value;
+                        if (p && p !== c) return alert('Şifreler eşleşmiyor!');
+                        if (!u && !p) return alert('En az birini doldurun.');
+                        const data: Record<string,string> = {};
+                        if (u) data.username = u;
+                        if (p) data.password = btoa(p);
+                        await setDoc(doc(db, 'settings', 'adminCredentials'), data, { merge: true });
+                        alert('Güncellendi ✅ Bir sonraki girişte yeni bilgilerinizi kullanın.');
+                        (document.getElementById('new-username') as HTMLInputElement).value = '';
+                        (document.getElementById('new-password') as HTMLInputElement).value = '';
+                        (document.getElementById('confirm-password') as HTMLInputElement).value = '';
+                      }} className="w-full bg-red-900 text-white py-4 rounded-2xl uppercase text-[10px] tracking-[0.2em] font-bold hover:bg-red-800 transition-all">
+                        Güncelle
+                      </button>
                     </div>
                   </div>
                 </div>
