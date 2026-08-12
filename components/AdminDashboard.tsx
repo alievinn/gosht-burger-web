@@ -110,6 +110,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [newVariant, setNewVariant] = useState({ label: '', price: 0 });
   const [siteLogo, setSiteLogo] = useState<string | null>(null);
   const [heroBg, setHeroBg] = useState<string | null>(null);
+  const [pwaIcon, setPwaIcon] = useState<string | null>(null);
   const [heroSlides, setHeroSlides] = useState<{id: string; url: string; order: number}[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     aboutText: '',
@@ -314,6 +315,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
 
     const slidesQ = query(collection(db, 'heroSlides'), orderBy('order','asc'));
     const unsubSlides = onSnapshot(slidesQ, snap => { setHeroSlides(snap.docs.map(d=>({id:d.id,...d.data()})) as {id:string;url:string;order:number}[]); });
+    onSnapshot(doc(db,'settings','pwaIcon'), snap => { if(snap.exists()) setPwaIcon(snap.data().url || null); });
     const unsubCoupons = onSnapshot(couponsQuery, (snapshot) => {
       setCoupons(snapshot.docs.map((docItem) => ({
         id: docItem.id,
@@ -2073,6 +2075,32 @@ const saveChanges = async (updated: MenuItem[]) => {
                 </div>
 
                 <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="w-10 h-10 bg-red-900/20 rounded-xl flex items-center justify-center border border-red-900/30"><Sparkles size={20} className="text-red-600" /></div>
+                    <h4 className="text-white serif text-2xl tracking-tight">Uygulama İkonu (PWA)</h4>
+                  </div>
+                  <p className="text-stone-400 text-sm font-light mb-8">Telefona yüklenen uygulamanın ana ekran ikonunu buradan değiştirebilirsiniz. Kare, yüksek çözünürlüklü bir görsel yükleyin.</p>
+                  <div className="flex items-center gap-8">
+                    <div className="w-24 h-24 rounded-3xl overflow-hidden bg-stone-950 border border-white/5 flex items-center justify-center shadow-xl shrink-0">
+                      {pwaIcon ? <img src={pwaIcon} alt="PWA Icon" className="w-full h-full object-cover" /> : <div className="text-4xl">🍔</div>}
+                    </div>
+                    <div className="space-y-4">
+                      <div className="relative inline-block">
+                        <button className="bg-red-900 text-white px-8 py-4 rounded-2xl uppercase text-[10px] tracking-[0.2em] font-bold hover:bg-red-800 transition-all shadow-lg">Yeni İkon Yükle</button>
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={async(e)=>{
+                            const file=e.target.files?.[0]; if(!file)return;
+                            const reader=new FileReader();
+                            reader.onloadend=async()=>{ const url=reader.result as string; setPwaIcon(url); await setDoc(doc(db,'settings','pwaIcon'),{url},{merge:true}); };
+                            reader.readAsDataURL(file);
+                          }} />
+                      </div>
+                      {pwaIcon&&<button onClick={async()=>{setPwaIcon(null);await setDoc(doc(db,'settings','pwaIcon'),{url:null},{merge:true});}} className="block text-stone-500 hover:text-red-400 text-xs transition-colors">İkonu sıfırla</button>}
+                    </div>
+                  </div>
+                </div>
+
+                                <div className="bg-stone-900 p-10 border border-white/5 rounded-3xl shadow-2xl">
                   <div className="flex items-center gap-4 mb-10"><div className="w-10 h-10 bg-red-900/20 rounded-xl flex items-center justify-center border border-red-900/30"><Upload size={20} className="text-red-600" /></div><h4 className="text-white serif text-2xl tracking-tight">Slider Görselleri</h4></div>
                   <p className="text-stone-400 text-sm font-light mb-8">Ana sayfada gösterilecek slider görsellerini buradan yönetin. Sağ-sol ok ile geçiş, 5 saniyede otomatik ilerleme.</p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
