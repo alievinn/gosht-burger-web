@@ -296,6 +296,3 @@ setMenuItems(items);
 
 export default App;
 
-function setBranches(items: Branch[]) {
-  throw new Error('Function not implemented.');
-}
