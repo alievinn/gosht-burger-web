@@ -32,6 +32,7 @@ const App: React.FC = () => {
   const [isFranchiseOpen, setIsFranchiseOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -42,6 +43,7 @@ const App: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCloseAdmin = () => {
+    if (isPWA) return; // PWA modunda admin kapatılamaz
     setIsAdminOpen(false);
     if (location.pathname === '/gosht-yonetim-2026') {
       navigate('/');
