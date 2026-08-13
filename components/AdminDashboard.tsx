@@ -2763,7 +2763,7 @@ const saveChanges = async (updated: MenuItem[]) => {
                   )}
                 </div>
               </div>
-            )
+            )}
             </motion.div>
             
             <div className="text-stone-600 text-[10px] text-center p-8 border-t border-stone-900 mt-12 uppercase tracking-[0.2em]">
