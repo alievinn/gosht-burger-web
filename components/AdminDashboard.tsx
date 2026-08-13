@@ -1216,19 +1216,20 @@ const saveChanges = async (updated: MenuItem[]) => {
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                   <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
                     {/* Time Filter */}
-                    <div className="flex items-center gap-1 bg-stone-900 p-1.5 rounded-2xl border border-white/5">
+                    <div className="flex flex-wrap items-center gap-1 bg-stone-900 p-1.5 rounded-2xl border border-white/5">
                       <Clock size={14} className="ml-2 text-stone-500" />
                       <button onClick={() => setTimeFilter('all')} className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-xl transition-all ${timeFilter === 'all' ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' : 'text-stone-500 hover:text-white'}`}>Hepsi</button>
                       <button onClick={() => setTimeFilter('today')} className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-xl transition-all ${timeFilter === 'today' ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' : 'text-stone-500 hover:text-white'}`}>Bugün</button>
                       <button onClick={() => setTimeFilter('last7')} className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-xl transition-all ${timeFilter === 'last7' ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' : 'text-stone-500 hover:text-white'}`}>7 Gün</button>
                       <button onClick={() => setTimeFilter('custom')} className={`px-4 py-1.5 text-[10px] uppercase font-bold rounded-xl transition-all ${timeFilter === 'custom' ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' : 'text-stone-500 hover:text-white'}`}>Özel</button>
                       {timeFilter === 'custom' && (
-                        <div className="flex items-center gap-2 ml-2">
+                        <div className="flex items-center gap-2 w-full pt-1 pl-1">
+                          <span className="text-stone-500 text-[10px]">Başlangıç:</span>
                           <input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}
-                            className="bg-stone-950 border border-white/10 text-white text-[10px] px-2 py-1 rounded-lg outline-none focus:border-red-900/50" />
-                          <span className="text-stone-500 text-xs">—</span>
+                            className="bg-stone-950 border border-white/10 text-white text-[10px] px-2 py-1.5 rounded-lg outline-none focus:border-red-900/50 flex-1" />
+                          <span className="text-stone-500 text-[10px]">Bitiş:</span>
                           <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}
-                            className="bg-stone-950 border border-white/10 text-white text-[10px] px-2 py-1 rounded-lg outline-none focus:border-red-900/50" />
+                            className="bg-stone-950 border border-white/10 text-white text-[10px] px-2 py-1.5 rounded-lg outline-none focus:border-red-900/50 flex-1" />
                         </div>
                       )}
                     </div>
