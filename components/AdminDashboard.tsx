@@ -788,7 +788,7 @@ const saveChanges = async (updated: MenuItem[]) => {
           )}
         </div>
         {isAuthenticated && (
-          <div className="flex overflow-x-auto custom-scrollbar border-t border-white/5">
+          <div className="grid grid-cols-2 border-t border-white/5">
             {[
               { id: 'menu', label: 'Menü' },
               { id: 'orders', label: 'Siparişler' },
@@ -804,8 +804,8 @@ const saveChanges = async (updated: MenuItem[]) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as AdminTab)}
-                className={`flex-none px-6 py-4 text-[10px] uppercase tracking-widest font-bold border-b-2 transition-all ${
-                  activeTab === tab.id ? 'border-red-600 text-white' : 'border-transparent text-stone-500'
+                className={`w-full px-4 py-4 text-[10px] uppercase tracking-widest font-bold border-b border-white/5 transition-all ${
+                  activeTab === tab.id ? 'bg-red-900/20 text-white border-l-2 border-l-red-600' : 'text-stone-500 border-l-2 border-l-transparent'
                 }`}
               >
                 {tab.label}
