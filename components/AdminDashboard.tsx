@@ -705,16 +705,16 @@ const saveChanges = async (updated: MenuItem[]) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-stone-950 flex flex-col md:flex-row overflow-hidden"
+      className="fixed inset-0 z-[100] bg-stone-950 flex flex-row overflow-hidden"
     >
       {/* Desktop Sidebar */}
       {isAuthenticated && (
-        <div className="hidden md:flex w-72 bg-stone-900 border-r border-white/5 flex-col shrink-0">
-          <div className="p-8 border-b border-white/5 flex items-center gap-4">
+        <div className="flex w-14 md:w-64 bg-stone-900 border-r border-white/5 flex-col shrink-0">
+          <div className="p-3 md:p-8 border-b border-white/5 flex items-center gap-4 justify-center md:justify-start">
             <div className="w-10 h-10 bg-red-900 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/20">
               <Lock className="text-white" size={20} />
             </div>
-            <div>
+            <div className="hidden md:block">
               <h2 className="text-white font-serif text-lg leading-tight">GOSHT</h2>
               <p className="text-stone-500 text-[10px] uppercase tracking-widest font-bold">Admin Paneli</p>
             </div>
@@ -736,14 +736,15 @@ const saveChanges = async (updated: MenuItem[]) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as AdminTab)}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${
+                title={tab.label}
+                className={`w-full flex items-center justify-center md:justify-start gap-3 px-2 md:px-4 py-3 rounded-xl transition-all duration-300 group ${
                   activeTab === tab.id 
                     ? 'bg-red-900 text-white shadow-lg shadow-red-900/20' 
                     : 'text-stone-500 hover:text-stone-200 hover:bg-white/5'
                 }`}
               >
                 <tab.icon size={20} className={activeTab === tab.id ? 'text-white' : 'text-stone-600 group-hover:text-stone-400'} />
-                <span className="text-sm font-medium tracking-wide">{tab.label}</span>
+                <span className="hidden md:block text-sm font-medium tracking-wide">{tab.label}</span>
                 {tab.id === 'orders' && orders.filter(o => o.status === 'pending').length > 0 && (
                   <span className="ml-auto bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
                     {orders.filter(o => o.status === 'pending').length}
@@ -774,8 +775,8 @@ const saveChanges = async (updated: MenuItem[]) => {
         </div>
       )}
 
-      {/* Mobile Header & Tabs */}
-      <div className="md:hidden flex flex-col shrink-0 bg-stone-900 border-b border-white/5" style={{paddingTop: isPWA ? 'env(safe-area-inset-top, 0px)' : '0' }}>
+      {/* Mobile Header - hidden, sidebar used instead */}
+      <div className="hidden" style={{paddingTop: isPWA ? 'env(safe-area-inset-top, 0px)' : '0' }}>
         <div className="p-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Lock className="text-red-600" size={20} />
