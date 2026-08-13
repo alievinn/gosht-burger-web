@@ -72,6 +72,10 @@ interface AdminDashboardProps {
   
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
+  const isPWA = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true
+  );
   const [activeTab, setActiveTab] = useState<AdminTab>('menu');
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
@@ -757,6 +761,7 @@ const saveChanges = async (updated: MenuItem[]) => {
               <LogOut size={20} className="text-stone-600 group-hover:text-red-500" />
               <span className="text-sm font-medium tracking-wide">Çıkış Yap</span>
             </button>
+            {!isPWA && (
             <button 
               onClick={onClose}
               className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-stone-500 hover:text-white hover:bg-white/5 transition-all duration-300 group"
@@ -764,20 +769,23 @@ const saveChanges = async (updated: MenuItem[]) => {
               <X size={20} className="text-stone-600 group-hover:text-white" />
               <span className="text-sm font-medium tracking-wide">Paneli Kapat</span>
             </button>
+            )}
           </div>
         </div>
       )}
 
       {/* Mobile Header & Tabs */}
-      <div className="md:hidden flex flex-col shrink-0 bg-stone-900 border-b border-white/5">
+      <div className="md:hidden flex flex-col shrink-0 bg-stone-900 border-b border-white/5" style={{paddingTop: isPWA ? 'env(safe-area-inset-top, 0px)' : '0' }}>
         <div className="p-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Lock className="text-red-600" size={20} />
             <h2 className="text-white font-serif text-lg">Admin Paneli</h2>
           </div>
+          {!isPWA && (
           <button onClick={onClose} className="text-stone-500 hover:text-white p-2">
             <X size={24} />
           </button>
+          )}
         </div>
         {isAuthenticated && (
           <div className="flex overflow-x-auto custom-scrollbar border-t border-white/5">
