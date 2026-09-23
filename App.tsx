@@ -17,6 +17,7 @@ import { MENU_ITEMS } from './constants';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { AIChat } from './components/AIChat';
+import { Analytics } from '@vercel/analytics/react';
 import { MenuSection } from './components/MenuSection';
 import { About } from './components/About';
 import { Franchise } from './components/Franchise';
@@ -226,6 +227,7 @@ setMenuItems(items);
         <Franchise onOpenFranchise={() => setIsFranchiseOpen(true)} />
       </main>
       <AIChat />
+      <Analytics />
 
       <div id="contact" className="scroll-mt-28">
         <Footer />
