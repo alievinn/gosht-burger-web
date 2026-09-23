@@ -1,177 +1,131 @@
-
-import React, { useEffect, useState } from 'react';
-import { MENU_ITEMS } from '../constants';
-import { MenuItem } from '../types';
-import { ShoppingBag, Star } from 'lucide-react';
-import { motion } from 'motion/react';
+import React, { useState } from 'react';
+import { MenuItem, Category } from '../types';
+import { ShoppingBag, Star, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 
 interface MenuSectionProps {
   onAddToCart: (itemName: string, quantity: number, customizations?: string, variantId?: string) => boolean;
-  items: MenuItem[]; // İşte bu satırı ekledik kanka
+  items: MenuItem[];
 }
 
+const CATEGORIES = ['Tümü', ...Object.values(Category)] as const;
+
 export const MenuSection: React.FC<MenuSectionProps> = ({ onAddToCart, items }) => {
-  // Artık 'items' doğrudan App.tsx'den (Firebase'den) geliyor.
-  // Aşağıdaki state'ler sadece buton efektleri ve varyant seçimleri için kalmalı:
+  const [activeCategory, setActiveCategory] = useState<string>('Tümü');
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const shouldReduceMotion = useReducedMotion();
 
-  // ESKİ loadItems VE useEffect BLOĞUNU TAMAMEN SİLEBİLİRSİN.
-  // Çünkü veriler artık yukarıdaki 'items' değişkeninin içinde hazır geliyor.
+  const visibleItems = items.filter(item => {
+    if ((item as any).hidden) return false;
+    if (activeCategory === 'Tümü') return true;
+    return item.category === activeCategory;
+  });
 
-  const loadItems = async () => {
-    try {
-      const response = await fetch('/api/menu');
-      const data = await response.json();
-      if (data) {
-        setItems(data);
-      } else {
-        setItems(MENU_ITEMS);
-      }
-    } catch (error) {
-      console.error("Error loading menu:", error);
-      setItems(MENU_ITEMS);
-    }
-  };
-
-  useEffect(() => {
-    loadItems();
-    window.addEventListener('menu-updated', loadItems);
-    return () => window.removeEventListener('menu-updated', loadItems);
-  }, []);
-
-  const handleAddClick = (item: MenuItem) => {
+  const handleAdd = (item: MenuItem) => {
     const variantId = selectedVariants[item.id];
     const success = onAddToCart(item.name, 1, undefined, variantId);
     if (success) {
-      setAddedItems(prev => ({ ...prev, [item.id]: true }));
-      setTimeout(() => {
-        setAddedItems(prev => ({ ...prev, [item.id]: false }));
-      }, 2000);
+      setAddedItems(p => ({ ...p, [item.id]: true }));
+      setTimeout(() => setAddedItems(p => ({ ...p, [item.id]: false })), 1800);
     }
   };
 
   return (
-    <section id="menu" className="py-32 bg-stone-950 relative scroll-mt-28 overflow-hidden">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-red-900/20 blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-amber-900/10 blur-[120px] rounded-full"></div>
-      </div>
-
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col items-center"
-          >
-            <span className="text-brand-red tracking-[0.5em] text-xs uppercase font-bold mb-4 block">Gastronomi Seçkisi</span>
-            <h2 className="text-5xl md:text-6xl text-white font-serif mb-6 premium-gradient-text">GOSHT MENÜ</h2>
-            <div className="flex items-center gap-4 mb-6">
-              <div className="h-[1px] w-12 bg-stone-800"></div>
-              <Star size={14} className="text-brand-red fill-brand-red" />
-              <div className="h-[1px] w-12 bg-stone-800"></div>
-            </div>
-            <p className="text-stone-400 max-w-2xl mx-auto text-base font-light leading-relaxed tracking-wide">
-              Alevde mühürlenen %100 dana döş etinin, imza "Közmix" ve tereyağlı brioche ekmekle buluştuğu eşsiz bir gurme serüveni.
-            </p>
-          </motion.div>
+    <section id="menu" className="py-24 md:py-32 bg-stone-950 relative scroll-mt-20">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="mb-16 md:mb-20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-px bg-red-600" />
+            <span className="text-red-500 text-[11px] uppercase tracking-[0.35em] font-bold">Menü</span>
+          </div>
+          <h2 className="text-4xl md:text-6xl font-serif text-white tracking-tight mb-4">İmza Lezzetler</h2>
+          <p className="text-stone-500 text-sm md:text-base font-light max-w-md">Her ürün günlük taze hazırlanır. %100 dana döş, özel soslar, GOSHT kalitesi.</p>
         </div>
-
-        {/* Items Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-16">
-          {items.map((item, index) => (
-            <motion.div 
-              key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="group flex flex-col h-full glass-card p-4 hover:border-red-900/30 transition-all duration-500"
-            >
-              <div className="relative overflow-hidden rounded-3xl mb-8 aspect-[4/3] shrink-0">
-                {item.image ? (
-                  <img 
-                    src={item.image} 
-                    alt={item.name} 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-stone-950 flex flex-col items-center justify-center">
-                    <div className="text-2xl font-serif tracking-[0.2em] text-stone-800">GOSHT</div>
-                  </div>
-                )}
-                
-                {item.isSignature && (
-                  <div className="absolute top-4 left-4 bg-stone-950/80 backdrop-blur-md text-gold text-[10px] px-4 py-1.5 uppercase tracking-[0.2em] font-bold border border-gold/20 z-10 rounded-full">
-                    İmza Lezzet
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity"></div>
-              </div>
-              
-              <div className="px-4 flex flex-col flex-1">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-2xl text-white font-serif tracking-tight group-hover:text-brand-red transition-colors duration-300">{item.name}</h3>
-                </div>
-                
-                <p className="text-stone-500 text-sm leading-relaxed mb-8 font-light tracking-wide line-clamp-3 min-h-[4.5rem]">{item.description}</p>
-                
-                <div className="mt-auto pb-4 flex flex-col gap-6">
-                  {item.variants && item.variants.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {item.variants.map((v) => (
-                        <button
-                          key={v.id}
-                          onClick={() => setSelectedVariants(prev => ({ ...prev, [item.id]: v.id }))}
-                          className={`px-4 py-2 text-[10px] uppercase tracking-[0.2em] font-bold border transition-all duration-300 rounded-full ${
-                            selectedVariants[item.id] === v.id
-                              ? 'bg-red-900 border-red-800 text-white shadow-lg shadow-red-900/20'
-                              : 'bg-stone-950 border-stone-800 text-stone-500 hover:border-stone-700 hover:text-stone-300'
-                          }`}
-                        >
-                          {v.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                    <span className="text-2xl text-white font-serif font-medium">
-                      {item.variants && item.variants.length > 0 
-                        ? (item.variants.find(v => v.id === selectedVariants[item.id])?.price || item.price) 
-                        : item.price} <span className="text-sm text-stone-500 ml-1">TL</span>
-                    </span>
-                    
-                    <button 
-                      onClick={() => handleAddClick(item)}
-                      disabled={item.variants && item.variants.length > 0 && !selectedVariants[item.id]}
-                      className={`relative group/btn flex items-center gap-3 px-6 py-3 rounded-full uppercase tracking-[0.2em] text-[10px] font-bold transition-all duration-500 overflow-hidden ${
-                        addedItems[item.id] 
-                          ? 'bg-emerald-900 text-white border-emerald-800' 
-                          : item.variants && item.variants.length > 0 && !selectedVariants[item.id]
-                            ? 'bg-stone-900 text-stone-700 border border-stone-800 cursor-not-allowed'
-                            : 'bg-white text-stone-950 hover:bg-red-900 hover:text-white border border-white'
-                      }`}
-                    >
-                      <ShoppingBag size={14} className={addedItems[item.id] ? 'animate-bounce' : ''} />
-                      <span className="relative z-10">
-                        {addedItems[item.id] 
-                          ? 'Eklendi' 
-                          : item.variants && item.variants.length > 0 && !selectedVariants[item.id]
-                            ? 'Seçim Yapın'
-                            : 'Sepete Ekle'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+        <div className="flex gap-2 mb-12 overflow-x-auto pb-2">
+          {CATEGORIES.map(cat => (
+            <button key={cat} onClick={() => setActiveCategory(cat)}
+              className={`shrink-0 px-5 py-2.5 text-[11px] uppercase font-bold tracking-[0.2em] rounded-full border transition-all duration-300 ${
+                activeCategory === cat ? 'bg-red-900 border-red-900 text-white shadow-lg shadow-red-900/30' : 'border-white/10 text-stone-400 hover:border-white/30 hover:text-white'
+              }`}>
+              {cat}
+            </button>
           ))}
         </div>
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <AnimatePresence mode="popLayout">
+            {visibleItems.map(item => {
+              const isSoldOut = (item as any).soldOut;
+              const added = addedItems[item.id];
+              return (
+                <motion.div key={item.id} layout
+                  initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={shouldReduceMotion ? {} : { opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.35 }}
+                  whileHover={shouldReduceMotion ? {} : { y: -4 }}
+                  className="group relative bg-stone-900 border border-white/5 rounded-2xl overflow-hidden flex flex-col hover:border-white/15 hover:shadow-2xl hover:shadow-black/40 transition-all duration-500">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-stone-800">
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} loading="lazy"
+                        className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${isSoldOut ? 'grayscale opacity-60' : ''}`} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-stone-700"><ShoppingBag size={32} /></div>
+                    )}
+                    <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                      {item.isSignature && (
+                        <span className="flex items-center gap-1 bg-amber-500 text-stone-900 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
+                          <Star size={9} fill="currentColor" /> İmza
+                        </span>
+                      )}
+                      {isSoldOut && (
+                        <span className="flex items-center gap-1 bg-stone-800/90 backdrop-blur text-stone-400 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/10">
+                          <AlertCircle size={9} /> Tükendi
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col flex-1 p-5">
+                    <span className="text-[9px] text-red-500 uppercase tracking-widest font-bold mb-1">{item.category}</span>
+                    <h3 className="text-white font-serif text-xl leading-tight mb-2">{item.name}</h3>
+                    <p className="text-stone-500 text-sm font-light leading-relaxed mb-4 flex-1 line-clamp-2">{item.description}</p>
+                    {item.variants && item.variants.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {item.variants.map(v => (
+                          <button key={v.id} onClick={() => setSelectedVariants(p => ({ ...p, [item.id]: v.id }))}
+                            className={`text-[10px] px-3 py-1 rounded-full border font-medium transition-all ${selectedVariants[item.id] === v.id ? 'bg-red-900 border-red-900 text-white' : 'border-white/10 text-stone-400 hover:border-white/20'}`}>
+                            {v.label} · {v.price} TL
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+                      <div>
+                        <span className="text-white font-bold text-xl">
+                          {item.variants?.length ? (item.variants.find(v => v.id === selectedVariants[item.id])?.price ?? item.price) : item.price}
+                        </span>
+                        <span className="text-stone-500 text-sm ml-1">TL</span>
+                      </div>
+                      <button onClick={() => !isSoldOut && handleAdd(item)} disabled={isSoldOut}
+                        className={`flex items-center gap-2 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.15em] rounded-full transition-all duration-300 ${
+                          isSoldOut ? 'bg-stone-800 text-stone-600 cursor-not-allowed' : added ? 'bg-green-700 text-white scale-95' : 'bg-red-900 text-white hover:bg-red-800 active:scale-95'
+                        }`}>
+                        <ShoppingBag size={13} />
+                        {isSoldOut ? 'Tükendi' : added ? 'Eklendi ✓' : 'Sepete Ekle'}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
+        {visibleItems.length === 0 && (
+          <div className="text-center py-20 text-stone-600">
+            <ShoppingBag size={40} className="mx-auto mb-4 opacity-30" />
+            <p>Bu kategoride ürün bulunmuyor.</p>
+          </div>
+        )}
       </div>
     </section>
   );
