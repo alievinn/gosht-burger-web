@@ -115,6 +115,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
   const [siteLogo, setSiteLogo] = useState<string | null>(null);
   const [heroBg, setHeroBg] = useState<string | null>(null);
   const [pwaIcon, setPwaIcon] = useState<string | null>(null);
+  const [visitorData, setVisitorData] = useState<{date: string; visitors: number; pageviews: number}[]>([]);
+  const [visitorLoading, setVisitorLoading] = useState(false);
   const [heroSlides, setHeroSlides] = useState<{id: string; url: string; order: number}[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     aboutText: '',
@@ -322,6 +324,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose 
     const slidesQ = query(collection(db, 'heroSlides'), orderBy('order','asc'));
     const unsubSlides = onSnapshot(slidesQ, snap => { setHeroSlides(snap.docs.map(d=>({id:d.id,...d.data()})) as {id:string;url:string;order:number}[]); });
     onSnapshot(doc(db,'settings','pwaIcon'), snap => { if(snap.exists()) setPwaIcon(snap.data().url || null); });
+    setVisitorLoading(true);
+    fetch('/api/analytics').then(r=>r.json()).then(data=>{
+      if(data && Array.isArray(data.data)) setVisitorData(data.data.map((d) => ({ date: d.key, visitors: d.uniques||0, pageviews: d.total||0 })));
+    }).catch(()=>{}).finally(()=>setVisitorLoading(false));
     onSnapshot(doc(db, 'settings', 'logo'), snap => { if(snap.exists()) setSiteLogo(snap.data().logo || null); });
     onSnapshot(doc(db, 'settings', 'siteConfig'), snap => { if(snap.exists()) setSiteSettings(prev => ({...prev, ...snap.data()})); });
     const unsubCoupons = onSnapshot(couponsQuery, (snapshot) => {
@@ -722,6 +728,7 @@ const saveChanges = async (updated: MenuItem[]) => {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
             {[
+              { id: 'visitors', label: 'Ziyaretçiler', icon: TrendingUp },
               { id: 'menu', label: 'Menü Yönetimi', icon: ShoppingBag },
               { id: 'orders', label: 'Siparişler', icon: Clock },
               { id: 'accounting', label: 'Muhasebe', icon: PieChart },
@@ -790,6 +797,7 @@ const saveChanges = async (updated: MenuItem[]) => {
         {isAuthenticated && (
           <div className="grid grid-cols-2 border-t border-white/5">
             {[
+              { id: 'visitors', label: 'Ziyaretçi' },
               { id: 'menu', label: 'Menü' },
               { id: 'orders', label: 'Siparişler' },
               { id: 'accounting', label: 'Muhasebe' },
@@ -1453,6 +1461,64 @@ const saveChanges = async (updated: MenuItem[]) => {
             )}
 
             {/* ACCOUNTING TAB */}
+            {activeTab === 'visitors' && (
+              <div className="p-6 md:p-10 space-y-8">
+                <div>
+                  <h3 className="text-3xl text-white font-serif tracking-tight mb-2">Site Ziyaretçileri</h3>
+                  <p className="text-stone-500 text-sm">Son 7 günlük ziyaretçi ve sayfa görüntüleme verileri</p>
+                </div>
+                {visitorLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="w-8 h-8 border-2 border-red-900 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : visitorData.length === 0 ? (
+                  <div className="bg-stone-900 rounded-3xl p-12 text-center border border-white/5">
+                    <div className="text-4xl mb-4">📊</div>
+                    <p className="text-white font-medium mb-2">Henüz veri yok</p>
+                    <p className="text-stone-500 text-sm">Vercel Analytics aktif, veriler birkaç dakika içinde görünür.</p>
+                    <p className="text-stone-600 text-xs mt-4">VERCEL_ACCESS_TOKEN environment variable eklenmelidir.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="bg-stone-900 rounded-2xl p-6 border border-white/5">
+                        <p className="text-stone-500 text-xs uppercase tracking-widest mb-2">Toplam Ziyaretçi</p>
+                        <p className="text-white text-3xl font-bold">{visitorData.reduce((a,b)=>a+b.visitors,0).toLocaleString('tr-TR')}</p>
+                        <p className="text-stone-600 text-xs mt-1">Son 7 gün</p>
+                      </div>
+                      <div className="bg-stone-900 rounded-2xl p-6 border border-white/5">
+                        <p className="text-stone-500 text-xs uppercase tracking-widest mb-2">Sayfa Görüntüleme</p>
+                        <p className="text-white text-3xl font-bold">{visitorData.reduce((a,b)=>a+b.pageviews,0).toLocaleString('tr-TR')}</p>
+                        <p className="text-stone-600 text-xs mt-1">Son 7 gün</p>
+                      </div>
+                      <div className="bg-stone-900 rounded-2xl p-6 border border-white/5">
+                        <p className="text-stone-500 text-xs uppercase tracking-widest mb-2">Bugünkü Ziyaretçi</p>
+                        <p className="text-white text-3xl font-bold">{(visitorData[visitorData.length-1]?.visitors||0).toLocaleString('tr-TR')}</p>
+                        <p className="text-stone-600 text-xs mt-1">Bugün</p>
+                      </div>
+                    </div>
+                    <div className="bg-stone-900 rounded-3xl border border-white/5 overflow-hidden">
+                      <div className="p-6 border-b border-white/5"><h4 className="text-white font-medium">Günlük Detay</h4></div>
+                      <div className="divide-y divide-white/5">
+                        {[...visitorData].reverse().map((d, i) => (
+                          <div key={i} className="flex items-center justify-between px-6 py-4">
+                            <span className="text-stone-400 text-sm">{new Date(d.date).toLocaleDateString('tr-TR', {day:'numeric',month:'long',weekday:'short'})}</span>
+                            <div className="flex items-center gap-6">
+                              <div className="text-right"><p className="text-white font-bold">{d.visitors}</p><p className="text-stone-600 text-[10px]">Ziyaretçi</p></div>
+                              <div className="text-right"><p className="text-white font-bold">{d.pageviews}</p><p className="text-stone-600 text-[10px]">Sayfa</p></div>
+                              <div className="w-20 h-2 bg-stone-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-red-900 rounded-full" style={{width: Math.min(100,(d.visitors/Math.max(...visitorData.map(x=>x.visitors),1))*100)+'%'}} />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             {activeTab === 'accounting' && (
               <div className="space-y-12 animate-fade-in">
                 <div className="flex justify-between items-center">
