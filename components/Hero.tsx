@@ -51,12 +51,12 @@ export const Hero: React.FC = () => {
               className="text-5xl md:text-7xl lg:text-8xl font-serif text-white leading-[0.9] tracking-tighter mb-6"
             >
               {settings?.heroTitle ? (
-                <span className="block premium-gradient-text whitespace-pre-wrap">{settings.heroTitle}</span>
+                <span className="block text-white whitespace-pre-wrap">{settings.heroTitle}</span>
               ) : (
                 <>
-                  <span className="block premium-gradient-text">Gerçek</span>
-                  <span className="block italic gold-gradient-text">Burgerin</span>
-                  <span className="block premium-gradient-text">Adı: GOSHT</span>
+                  <span className="block text-white">Gerçek</span>
+                  <span className="block italic text-red-500">Burgerin</span>
+                  <span className="block text-white">Adı: GOSHT</span>
                 </>
               )}
             </motion.h1>
