@@ -1,97 +1,110 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HeroSlider } from './HeroSlider';
-import { ChevronDown, Sparkles } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react';
 import { SiteSettings } from '../types';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { ShoppingBag, ChevronDown } from 'lucide-react';
+
+const FACTS = [
+  { num: '%100', label: 'Dana Döş' },
+  { num: 'Günlük', label: 'Taze Hazırlık' },
+  { num: 'Özel', label: 'İmza Soslar' },
+];
 
 export const Hero: React.FC = () => {
-  const [heroBg, setHeroBg] = useState<string | null>(null);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const ref = useRef<HTMLElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', shouldReduceMotion ? '0%' : '20%']);
+  const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   useEffect(() => {
-    const settingsRef = doc(db, 'settings', 'siteConfig');
-    const unsubscribe = onSnapshot(
-      settingsRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data() as SiteSettings & { heroBg?: string | null };
-          setSettings(data);
-          setHeroBg(data.heroBg || null);
-        }
-      },
-      (error) => {
-        console.error('Error fetching hero settings from Firestore:', error);
-      }
-    );
-
-    return () => unsubscribe();
+    return onSnapshot(doc(db, 'settings', 'siteConfig'), snap => {
+      if (snap.exists()) setSettings(snap.data() as SiteSettings);
+    });
   }, []);
 
-  return (
-    <section id="home" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      <HeroSlider />
+  const anim = shouldReduceMotion
+    ? { initial: {}, animate: {}, transition: {} }
+    : { initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] } };
 
-      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-        <div className="flex flex-col items-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex items-center justify-center gap-2 mb-6"
-          >
-            <div className="h-[1px] w-8 bg-brand-red/50"></div>
-            <span className="text-brand-red tracking-[0.4em] text-xs md:text-sm uppercase font-semibold">
-              {settings?.heroSubtitle || 'Premium Gastronomi Deneyimi'}
-            </span>
-            <div className="h-[1px] w-8 bg-brand-red/50"></div>
+  return (
+    <>
+      <section ref={ref} id="home" className="relative h-screen w-full flex items-end pb-24 md:items-center md:pb-0 justify-center overflow-hidden">
+        <motion.div style={{ y }} className="absolute inset-0 z-0">
+          <HeroSlider />
+        </motion.div>
+        <div className="absolute inset-0 z-[1] bg-gradient-to-t from-stone-950 via-stone-950/50 to-transparent md:bg-gradient-to-r md:from-stone-950/90 md:via-stone-950/40 md:to-transparent" />
+        <motion.div style={{ opacity }} className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-12">
+          <div className="max-w-2xl">
+            <motion.div {...anim} transition={{ ...anim.transition, delay: 0.1 }} className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-px bg-red-600" />
+              <span className="text-red-500 text-[11px] uppercase tracking-[0.35em] font-bold">
+                {settings?.heroSubtitle || 'Batman • Türkiye'}
+              </span>
+            </motion.div>
+            <motion.h1
+              {...anim}
+              transition={{ ...anim.transition, delay: 0.25 }}
+              className="text-5xl md:text-7xl lg:text-8xl font-serif text-white leading-[0.9] tracking-tighter mb-6"
+            >
+              {settings?.heroTitle ? (
+                <span className="block premium-gradient-text whitespace-pre-wrap">{settings.heroTitle}</span>
+              ) : (
+                <>
+                  <span className="block premium-gradient-text">Gerçek</span>
+                  <span className="block italic gold-gradient-text">Burgerin</span>
+                  <span className="block premium-gradient-text">Adı: GOSHT</span>
+                </>
+              )}
+            </motion.h1>
+            <motion.p
+              {...anim}
+              transition={{ ...anim.transition, delay: 0.4 }}
+              className="text-stone-400 text-base md:text-lg font-light leading-relaxed mb-10 max-w-lg"
+            >
+              {settings?.heroDescription || "%100 dana döş, günlük taze hazırlık, özel imza soslar. Batman'da lezzeti yeniden tanımlıyoruz."}
+            </motion.p>
+            <motion.div {...anim} transition={{ ...anim.transition, delay: 0.55 }} className="flex flex-wrap gap-3 mb-10">
+              {FACTS.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
+                  <span className="text-red-400 font-bold text-sm">{f.num}</span>
+                  <span className="text-stone-300 text-xs">{f.label}</span>
+                </div>
+              ))}
+            </motion.div>
+            <motion.div {...anim} transition={{ ...anim.transition, delay: 0.7 }} className="flex flex-col sm:flex-row gap-4">
+              <a href="#menu" className="group relative inline-flex items-center justify-center gap-3 px-10 py-4 bg-red-900 text-white overflow-hidden transition-all hover:bg-red-800 active:scale-95">
+                <ShoppingBag size={16} />
+                <span className="uppercase tracking-[0.2em] text-sm font-bold">{settings?.heroCtaText || 'Menüyü Keşfet'}</span>
+                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              </a>
+              <a href="#about" className="inline-flex items-center justify-center px-10 py-4 border border-white/20 text-stone-300 hover:border-white/50 hover:text-white transition-all text-sm uppercase tracking-[0.2em] font-medium">
+                Hikayemiz
+              </a>
+            </motion.div>
+          </div>
+        </motion.div>
+        {!shouldReduceMotion && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5, duration: 1 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden md:flex flex-col items-center gap-2">
+            <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+              <ChevronDown size={20} className="text-stone-500" />
+            </motion.div>
           </motion.div>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.4 }}
-            className="text-6xl md:text-8xl lg:text-9xl text-white font-serif mb-8 leading-[0.9] tracking-tighter"
-          >
-            {settings?.heroTitle ? (
-              <div className="whitespace-pre-wrap premium-gradient-text">{settings.heroTitle}</div>
-            ) : (
-              <>
-                <span className="block premium-gradient-text">Ateşin</span>
-                <span className="block italic gold-gradient-text ml-4 md:ml-12">Sanata</span>
-                <span className="block premium-gradient-text">Dönüşünü</span>
-              </>
-            )}
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="text-stone-400 max-w-xl mx-auto mb-12 text-base md:text-lg font-light leading-relaxed tracking-wide"
-          >
-            {settings?.heroSubtitle || "En seçkin etler, ustalıkla hazırlanan reçeteler ve Gosht'un imza lezzetleri. Batman'ın kalbinde gerçek bir gurme serüveni."}
-          </motion.p>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
-          >
-            <a href="#menu" className="group relative px-12 py-4 bg-red-900 text-white overflow-hidden transition-all hover:bg-red-800">
-              <span className="relative z-10 uppercase tracking-[0.2em] text-sm font-medium">{settings?.heroCtaText || 'Menüyü Keşfet'}</span>
-              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-            </a>
-            
-            <a href="#about" className="group flex items-center gap-3 text-stone-300 hover:text-white transition-colors py-2">
-              <span className="uppercase tracking-[0.2em] text-sm font-medium border-b border-stone-700 group-hover:border-white transition-all">Hikayemiz</span>
-              <Sparkles size={16} className="text-brand-red animate-pulse" />
-            </a>
-          </motion.div>
+        )}
+      </section>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-stone-950/95 backdrop-blur-md border-t border-white/10 px-4 py-3 flex items-center gap-3">
+        <div className="flex-1">
+          <p className="text-white text-sm font-bold">Sipariş Ver</p>
+          <p className="text-stone-500 text-[10px]">Hızlı teslimat · Batman</p>
         </div>
+        <a href="#menu" className="bg-red-900 text-white px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] hover:bg-red-800 transition-colors active:scale-95 rounded-sm">
+          Menüye Git
+        </a>
       </div>
-    </section>
+    </>
   );
 };
