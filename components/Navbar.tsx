@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Instagram, Music, MessageCircle, ShoppingBag, Star } from 'lucide-react';
+import { Menu, X, Instagram, Music, MessageCircle, ShoppingBag, Star, ClipboardList } from 'lucide-react';
 import { Logo } from './Logo';
 import { LiveEffects } from './LiveEffects';
 import { SiteSettings } from '../types';
@@ -12,9 +12,10 @@ interface NavbarProps {
   cartCount?: number;
   onOpenCart?: () => void;
   onOpenLoyalty?: () => void;
+  onOpenOrderHistory?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpenLoyalty }) => {
+export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpenLoyalty, onOpenOrderHistory }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -113,6 +114,15 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
                 ))}
           </div>
           
+          {onOpenOrderHistory && (
+            <button
+              onClick={onOpenOrderHistory}
+              className="px-4 py-2 bg-stone-800/60 border border-white/10 rounded-full text-stone-300 text-[9px] uppercase tracking-widest font-bold hover:bg-stone-700/60 transition-all flex items-center gap-2"
+            >
+              <ClipboardList size={12} />
+              Siparişlerim
+            </button>
+          )}
           {onOpenLoyalty && (
             <button 
               onClick={onOpenLoyalty}
