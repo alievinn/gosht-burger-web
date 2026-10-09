@@ -239,6 +239,15 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
               transition={{ delay: 0.5 }}
               className="flex flex-col items-center gap-8 pt-10 border-t border-white/5 w-full max-w-xs"
             >
+              {onOpenOrderHistory && (
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); onOpenOrderHistory(); }}
+                  className="w-full py-4 bg-stone-800/60 border border-white/10 rounded-xl text-stone-300 text-xs uppercase tracking-widest font-bold hover:bg-stone-700/60 transition-all flex items-center justify-center gap-3"
+                >
+                  <ClipboardList size={18} />
+                  Siparişlerim
+                </button>
+              )}
               {onOpenLoyalty && (
                 <button 
                   onClick={() => {
