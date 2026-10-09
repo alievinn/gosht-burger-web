@@ -58,25 +58,7 @@ export const LiveEffects: React.FC<LiveEffectsProps> = ({ settings }) => {
         </div>
       )}
 
-      {marqueeEnabled && (
-        <div className="fixed top-0 left-0 w-full z-[35] h-8 bg-red-900/95 backdrop-blur-md border-b border-white/10 overflow-hidden shadow-2xl">
-          <motion.div
-            className="flex items-center whitespace-nowrap h-8"
-            animate={{ x: ['0%', '-50%'] }}
-            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-          >
-            {[...repeated, ...repeated].map((t, i) => (
-              <span
-                key={i}
-                className="mx-6 text-[11px] uppercase tracking-[0.3em] font-bold text-white flex items-center"
-              >
-                {t}
-                <span className="ml-12 text-gold">•</span>
-              </span>
-            ))}
-          </motion.div>
-        </div>
-      )}
+
     </>
   );
 };
