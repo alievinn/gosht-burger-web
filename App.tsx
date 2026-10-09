@@ -274,6 +274,7 @@ setMenuItems(items);
           <CartModal
             isOpen={isCartOpen}
             onClose={() => setIsCartOpen(false)}
+            onOpenOrderHistory={() => setIsOrderHistoryOpen(true)}
             cart={cart}
             onUpdateQuantity={updateQuantity}
             onRemoveItem={removeItem}
