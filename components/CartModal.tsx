@@ -9,6 +9,7 @@ import { db } from '../services/firebase';
 interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenOrderHistory?: () => void;
   cart: CartItem[];
   onUpdateQuantity: (cartItemId: string, delta: number) => void;
   onRemoveItem: (cartItemId: string) => void;
@@ -19,7 +20,8 @@ type ModalStep = 'cart' | 'checkout' | 'success';
 
 export const CartModal: React.FC<CartModalProps> = ({ 
   isOpen, 
-  onClose, 
+  onClose,
+  onOpenOrderHistory, 
   cart, 
   onUpdateQuantity, 
   onRemoveItem,
@@ -316,6 +318,11 @@ await addDoc(collection(db, 'orders'), cleanOrder);
                     <button onClick={onClose} className="mt-6 text-gold hover:text-white text-xs uppercase tracking-[0.2em] font-bold transition-colors">
                       Menüye Göz At
                     </button>
+                    {onOpenOrderHistory && (
+                      <button onClick={() => { onClose(); onOpenOrderHistory(); }} className="mt-3 text-stone-500 hover:text-white text-xs uppercase tracking-[0.2em] font-bold transition-colors flex items-center gap-2">
+                        Geçmiş Siparişlerim
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -579,6 +586,12 @@ await addDoc(collection(db, 'orders'), cleanOrder);
                 <span className="text-3xl text-white font-serif font-bold tracking-tighter">{finalTotal} TL</span>
               </div>
             </div>
+            {step === 'cart' && onOpenOrderHistory && (
+              <button onClick={() => { onClose(); onOpenOrderHistory(); }}
+                className="w-full text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] font-medium transition-colors py-2 flex items-center justify-center gap-2">
+                📦 Geçmiş Siparişlerimi Gör
+              </button>
+            )}
             {step === 'cart' ? (
               <div className="space-y-3">
                 {belowMinOrder && (
