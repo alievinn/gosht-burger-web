@@ -27,6 +27,7 @@ import { FeedbackModal } from './components/FeedbackModal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { CartModal } from './components/CartModal';
 import { LoyaltyModal } from './components/LoyaltyModal';
+import { OrderHistory } from './components/OrderHistory';
 import { Branch, CartItem, MenuItem, SiteSettings } from './types';
 
 const App: React.FC = () => {
@@ -36,6 +37,7 @@ const App: React.FC = () => {
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
+  const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
@@ -216,6 +218,7 @@ setMenuItems(items);
         cartCount={cart.reduce((a, b) => a + b.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenLoyalty={() => setIsLoyaltyOpen(true)}
+          onOpenOrderHistory={() => setIsOrderHistoryOpen(true)}
       />
 
       <main>
@@ -280,6 +283,7 @@ setMenuItems(items);
       </AnimatePresence>
 
       <AnimatePresence>
+        <OrderHistory isOpen={isOrderHistoryOpen} onClose={() => setIsOrderHistoryOpen(false)} />
         {isLoyaltyOpen && (
           <LoyaltyModal
             isOpen={isLoyaltyOpen}
