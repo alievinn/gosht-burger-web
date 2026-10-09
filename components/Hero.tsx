@@ -96,15 +96,6 @@ export const Hero: React.FC = () => {
           </motion.div>
         )}
       </section>
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-stone-950/95 backdrop-blur-md border-t border-white/10 px-4 py-3 flex items-center gap-3">
-        <div className="flex-1">
-          <p className="text-white text-sm font-bold">Sipariş Ver</p>
-          <p className="text-stone-500 text-[10px]">Hızlı teslimat · Batman</p>
-        </div>
-        <a href="#menu" className="bg-red-900 text-white px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] hover:bg-red-800 transition-colors active:scale-95 rounded-sm">
-          Menüye Git
-        </a>
-      </div>
     </>
   );
 };
