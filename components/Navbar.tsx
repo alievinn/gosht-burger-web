@@ -74,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, onOpenCart, onOpe
   return (
     <>
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-      isScrolled ? 'py-4 bg-brand-red/90 backdrop-blur-xl border-b border-white/5 shadow-2xl' : 'py-8 bg-transparent'
+      isScrolled ? 'py-4 bg-stone-950/95 backdrop-blur-xl border-b border-white/10 shadow-2xl' : 'py-8 bg-transparent'
     }`}>
       <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Brand / Logo Area */}
