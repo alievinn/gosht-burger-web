@@ -8,7 +8,7 @@ interface LiveEffectsProps {
 
 export const LiveEffects: React.FC<LiveEffectsProps> = ({ settings }) => {
   const marqueeText = (settings?.marqueeText || '').trim();
-  const marqueeEnabled = !!settings?.marqueeEnabled && marqueeText.length > 0;
+  const marqueeEnabled = false; // devre dışı
   const effectEnabled = !!settings?.effectEnabled;
 
   const emojis = useMemo(() => {
