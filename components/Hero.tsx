@@ -39,12 +39,7 @@ export const Hero: React.FC = () => {
         <div className="absolute inset-0 z-[1] bg-gradient-to-t from-stone-950 via-stone-950/50 to-transparent md:bg-gradient-to-r md:from-stone-950/90 md:via-stone-950/40 md:to-transparent" />
         <motion.div style={{ opacity }} className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-12">
           <div className="max-w-2xl">
-            <motion.div {...anim} transition={{ ...anim.transition, delay: 0.1 }} className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-px bg-red-600" />
-              <span className="text-red-500 text-[11px] uppercase tracking-[0.35em] font-bold">
-                {settings?.heroSubtitle || 'Batman • Türkiye'}
-              </span>
-            </motion.div>
+
             <motion.h1
               {...anim}
               transition={{ ...anim.transition, delay: 0.25 }}
